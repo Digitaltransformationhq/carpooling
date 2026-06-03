@@ -1,5 +1,5 @@
 import { supabase } from "../lib/supabase";
-import { Ride, mockRides } from "./mockData";
+import { Ride } from "./mockData";
 
 /** Shape of a row in the `rides` table. */
 interface RideRow {
@@ -48,7 +48,7 @@ function mapRow(r: RideRow): Ride {
 
 /** All rides, newest trips first. Falls back to local seed when Supabase isn't connected. */
 export async function fetchRides(): Promise<Ride[]> {
-  if (!supabase) return mockRides;
+  if (!supabase) return [];
   const { data, error } = await supabase
     .from("rides")
     .select("*")
@@ -59,7 +59,7 @@ export async function fetchRides(): Promise<Ride[]> {
 
 /** Most recently published rides first (for the home page). Excludes completed rides. */
 export async function fetchRecentRides(limit = 10): Promise<Ride[]> {
-  if (!supabase) return mockRides.filter((r) => !r.completed).slice(0, limit);
+  if (!supabase) return [];
   const { data, error } = await supabase
     .from("rides")
     .select("*")
@@ -72,7 +72,7 @@ export async function fetchRecentRides(limit = 10): Promise<Ride[]> {
 }
 
 export async function fetchRideById(id: string): Promise<Ride | null> {
-  if (!supabase) return mockRides.find((r) => r.id === id) ?? null;
+  if (!supabase) return null;
   const { data, error } = await supabase.from("rides").select("*").eq("id", id).maybeSingle();
   if (error) throw error;
   return data ? mapRow(data as RideRow) : null;
@@ -88,16 +88,7 @@ export interface SearchFilters {
 export async function searchRides(filters: SearchFilters = {}): Promise<Ride[]> {
   const { from = "", to = "", date = "", minSeats = 0 } = filters;
 
-  if (!supabase) {
-    return mockRides.filter(
-      (r) =>
-        !r.completed &&
-        (!from || r.from.toLowerCase().includes(from.toLowerCase())) &&
-        (!to || r.to.toLowerCase().includes(to.toLowerCase())) &&
-        (!date || r.date >= date) &&
-        (!minSeats || r.seats >= minSeats)
-    );
-  }
+  if (!supabase) return [];
 
   let q = supabase
     .from("rides")
