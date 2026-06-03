@@ -9,7 +9,7 @@ import {
   type Profile as DBProfile,
 } from "../data/profiles";
 import { fetchUserStats, fetchMyTrips, type UserStats, type Trip } from "../data/account";
-import { deleteRide, markRideComplete } from "../data/rides";
+import { deleteRide, markRideComplete, markRideStarted } from "../data/rides";
 import { formatDate } from "../lib/format";
 
 const AVATAR = "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop";
@@ -76,6 +76,15 @@ export function Profile() {
 
   const reloadTrips = () => {
     if (authUser) fetchMyTrips(authUser.id).then(setTrips).catch(() => {});
+  };
+
+  const handleStart = async (rideId: string) => {
+    try {
+      await markRideStarted(rideId);
+      reloadTrips();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Could not update ride");
+    }
   };
 
   const handleComplete = async (rideId: string) => {
@@ -235,6 +244,17 @@ export function Profile() {
                     <div className="space-y-4">
                       {trips.map((trip) => {
                         const isCompleted = trip.completed || trip.date < todayStr;
+                        const isStarted = trip.started && !isCompleted;
+                        const statusLabel = isCompleted
+                          ? "Completed"
+                          : isStarted
+                          ? "On the way"
+                          : "Upcoming";
+                        const statusClass = isCompleted
+                          ? "bg-muted text-muted-foreground"
+                          : isStarted
+                          ? "bg-green-100 text-green-700"
+                          : "bg-primary/20 text-foreground";
                         return (
                           <div key={trip.key} className="border border-border rounded-lg p-4">
                             <div className="flex items-center justify-between gap-2 mb-3">
@@ -247,14 +267,8 @@ export function Profile() {
                                 <span className="font-medium">
                                   {trip.type === "driver" ? "Driving" : "Passenger"}
                                 </span>
-                                <span
-                                  className={`text-xs px-2 py-0.5 rounded-full ${
-                                    isCompleted
-                                      ? "bg-muted text-muted-foreground"
-                                      : "bg-primary/20 text-foreground"
-                                  }`}
-                                >
-                                  {isCompleted ? "Completed" : "Upcoming"}
+                                <span className={`text-xs px-2 py-0.5 rounded-full ${statusClass}`}>
+                                  {statusLabel}
                                 </span>
                               </div>
                               <span className="text-sm text-muted-foreground flex items-center gap-1 shrink-0">
@@ -295,7 +309,15 @@ export function Profile() {
                               <p className="text-sm text-muted-foreground">{trip.detail}</p>
                               {trip.type === "driver" && trip.rideId && (
                                 <div className="flex items-center gap-2">
-                                  {!isCompleted && (
+                                  {!isCompleted && !isStarted && (
+                                    <button
+                                      onClick={() => handleStart(trip.rideId!)}
+                                      className="text-xs font-medium px-3 py-1.5 rounded-lg border border-primary hover:bg-primary/10 transition-colors"
+                                    >
+                                      Start ride
+                                    </button>
+                                  )}
+                                  {!isCompleted && isStarted && (
                                     <button
                                       onClick={() => handleComplete(trip.rideId!)}
                                       className="text-xs font-medium px-3 py-1.5 rounded-lg border border-primary hover:bg-primary/10 transition-colors"

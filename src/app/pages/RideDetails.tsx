@@ -6,6 +6,7 @@ import {
   createBooking,
   deleteRide,
   markRideComplete,
+  markRideStarted,
   fetchRideBookings,
   removeBooking,
   fetchMyBookings,
@@ -116,6 +117,16 @@ export function RideDetails() {
     }
   };
 
+  const handleStart = async () => {
+    if (!ride) return;
+    try {
+      await markRideStarted(ride.id);
+      setRide({ ...ride, started: true });
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Could not update ride");
+    }
+  };
+
   const handleComplete = async () => {
     if (!ride) return;
     try {
@@ -165,6 +176,13 @@ export function RideDetails() {
   const available = Math.max(0, ride.seats - (ride.bookedSeats ?? 0));
   const isFull = available <= 0;
   const mySeats = myBookings.reduce((sum, b) => sum + b.seats, 0);
+  const isStarted = !!ride.started && !isCompleted;
+  const statusLabel = isCompleted ? "Completed" : isStarted ? "On the way" : "Upcoming";
+  const statusClass = isCompleted
+    ? "bg-muted text-muted-foreground"
+    : isStarted
+    ? "bg-green-100 text-green-700"
+    : "bg-primary/20 text-foreground";
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -244,20 +262,22 @@ export function RideDetails() {
               {isOwner ? (
                 <>
                   <div className="flex items-center justify-center mb-4">
-                    <span
-                      className={`text-xs px-3 py-1 rounded-full ${
-                        isCompleted
-                          ? "bg-muted text-muted-foreground"
-                          : "bg-primary/20 text-foreground"
-                      }`}
-                    >
-                      {isCompleted ? "Completed" : "Upcoming"}
+                    <span className={`text-xs px-3 py-1 rounded-full ${statusClass}`}>
+                      {statusLabel}
                     </span>
                   </div>
                   <p className="text-sm text-muted-foreground text-center mb-5">
                     This is your published ride.
                   </p>
-                  {!isCompleted && (
+                  {!isCompleted && !isStarted && (
+                    <button
+                      onClick={handleStart}
+                      className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors mb-3"
+                    >
+                      Start ride
+                    </button>
+                  )}
+                  {isStarted && (
                     <button
                       onClick={handleComplete}
                       className="w-full border border-primary py-3 rounded-lg font-medium hover:bg-primary/10 transition-colors mb-3"
@@ -325,6 +345,21 @@ export function RideDetails() {
                     )}
                   </div>
                 </>
+              ) : isCompleted ? (
+                <p className="text-sm text-muted-foreground text-center">
+                  This ride is completed.
+                </p>
+              ) : isStarted ? (
+                <div className="text-center">
+                  {mySeats > 0 && (
+                    <p className="font-medium mb-2">
+                      You've booked {mySeats} {mySeats === 1 ? "seat" : "seats"}.
+                    </p>
+                  )}
+                  <p className="text-sm text-muted-foreground">
+                    The driver is on the way — this ride has departed.
+                  </p>
+                </div>
               ) : (
                 <>
                   {mySeats > 0 && (

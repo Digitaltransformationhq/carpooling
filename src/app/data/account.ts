@@ -13,6 +13,7 @@ export interface Trip {
   to: string;
   date: string;
   completed: boolean;
+  started: boolean;
   detail: string;
 }
 
@@ -40,12 +41,12 @@ export async function fetchMyTrips(userId: string): Promise<Trip[]> {
   const [ridesRes, bookingsRes] = await Promise.all([
     supabase
       .from("rides")
-      .select("id, from_location, to_location, travel_date, seats, completed, booked_seats")
+      .select("id, from_location, to_location, travel_date, seats, completed, started, booked_seats")
       .eq("user_id", userId)
       .order("travel_date", { ascending: true }),
     supabase
       .from("bookings")
-      .select("id, created_at, rides(from_location, to_location, travel_date, driver_name)")
+      .select("id, created_at, rides(from_location, to_location, travel_date, driver_name, completed, started)")
       .eq("user_id", userId)
       .order("created_at", { ascending: false }),
   ]);
@@ -58,6 +59,7 @@ export async function fetchMyTrips(userId: string): Promise<Trip[]> {
     to: r.to_location,
     date: r.travel_date,
     completed: Boolean(r.completed),
+    started: Boolean(r.started),
     detail: `${Math.max(0, r.seats - (r.booked_seats ?? 0))} of ${r.seats} seats left`,
   }));
 
@@ -71,7 +73,8 @@ export async function fetchMyTrips(userId: string): Promise<Trip[]> {
         from: ride.from_location,
         to: ride.to_location,
         date: ride.travel_date,
-        completed: false,
+        completed: Boolean(ride.completed),
+        started: Boolean(ride.started),
         detail: `Driver: ${ride.driver_name}`,
       };
     })

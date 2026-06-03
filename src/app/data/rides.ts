@@ -20,6 +20,7 @@ interface RideRow {
   car_model: string;
   preferences: string[] | null;
   completed?: boolean | null;
+  started?: boolean | null;
   booked_seats?: number | null;
 }
 
@@ -44,6 +45,7 @@ function mapRow(r: RideRow): Ride {
     carModel: r.car_model,
     preferences: r.preferences ?? [],
     completed: Boolean(r.completed),
+    started: Boolean(r.started),
     bookedSeats: r.booked_seats ?? 0,
   };
 }
@@ -66,6 +68,7 @@ export async function fetchRecentRides(limit = 10): Promise<Ride[]> {
     .from("rides")
     .select("*")
     .eq("completed", false)
+    .eq("started", false) // hide rides already on the way
     .not("user_id", "is", null) // only real, user-published rides (hides seed/dummy data)
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -96,6 +99,7 @@ export async function searchRides(filters: SearchFilters = {}): Promise<Ride[]> 
     .from("rides")
     .select("*")
     .eq("completed", false)
+    .eq("started", false) // hide rides already on the way
     .not("user_id", "is", null); // only real, user-published rides
   if (from) q = q.ilike("from_location", `%${from}%`);
   if (to) q = q.ilike("to_location", `%${to}%`);
@@ -165,6 +169,12 @@ export async function deleteRide(rideId: string): Promise<void> {
 export async function markRideComplete(rideId: string): Promise<void> {
   if (!supabase) throw new Error("Supabase isn't connected.");
   const { error } = await supabase.from("rides").update({ completed: true }).eq("id", rideId);
+  if (error) throw error;
+}
+
+export async function markRideStarted(rideId: string): Promise<void> {
+  if (!supabase) throw new Error("Supabase isn't connected.");
+  const { error } = await supabase.from("rides").update({ started: true }).eq("id", rideId);
   if (error) throw error;
 }
 

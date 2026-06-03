@@ -5,6 +5,8 @@
 
 -- track how many seats are booked on each ride
 alter table public.rides     add column if not exists booked_seats int not null default 0;
+-- ride lifecycle: upcoming -> started ("on the way") -> completed
+alter table public.rides     add column if not exists started boolean not null default false;
 -- store the rider's phone so the driver can call them
 alter table public.bookings  add column if not exists passenger_phone text;
 

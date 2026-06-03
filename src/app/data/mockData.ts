@@ -18,6 +18,7 @@ export interface Ride {
   carModel: string;
   preferences: string[];
   completed?: boolean;
+  started?: boolean;
   bookedSeats?: number;
 }
 
