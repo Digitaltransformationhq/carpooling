@@ -1,7 +1,15 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { Ride } from "../data/mockData";
-import { fetchRideById, createBooking, deleteRide, markRideComplete } from "../data/rides";
+import {
+  fetchRideById,
+  createBooking,
+  deleteRide,
+  markRideComplete,
+  fetchRideBookings,
+  removeBooking,
+  type RideBooking,
+} from "../data/rides";
 import { fetchProfile } from "../data/profiles";
 import { useAuth } from "../context/AuthContext";
 import { formatDate, formatTime } from "../lib/format";
@@ -18,6 +26,7 @@ export function RideDetails() {
   const [booking, setBooking] = useState(false);
   const [driverPhone, setDriverPhone] = useState("");
   const [passengers, setPassengers] = useState(1);
+  const [riders, setRiders] = useState<RideBooking[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -38,16 +47,47 @@ export function RideDetails() {
       .catch(() => {});
   }, [ride?.driverId]);
 
+  // If you're the driver, load the riders who booked this ride.
+  useEffect(() => {
+    if (!ride || !authUser || ride.driverId !== authUser.id) {
+      setRiders([]);
+      return;
+    }
+    fetchRideBookings(ride.id).then(setRiders).catch(() => {});
+  }, [ride, authUser]);
+
+  const refreshRide = async (rideId: string) => {
+    const updated = await fetchRideById(rideId);
+    if (updated) setRide(updated);
+  };
+
   const handleBook = async () => {
     if (!ride) return;
+    if (!authUser) {
+      navigate("/login");
+      return;
+    }
     setBooking(true);
     try {
       await createBooking(ride.id, passengers);
       alert(`${passengers} ${passengers === 1 ? "seat" : "seats"} booked! 🎉`);
+      await refreshRide(ride.id);
+      setPassengers(1);
     } catch (err) {
       alert(err instanceof Error ? err.message : "Booking failed");
     } finally {
       setBooking(false);
+    }
+  };
+
+  const handleRemoveRider = async (bookingId: string) => {
+    if (!ride) return;
+    try {
+      await removeBooking(bookingId);
+      const [rb] = await Promise.all([fetchRideBookings(ride.id), refreshRide(ride.id)]);
+      setRiders(rb);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Could not remove rider");
     }
   };
 
@@ -97,6 +137,8 @@ export function RideDetails() {
   const todayStr = new Date().toISOString().slice(0, 10);
   const isOwner = !!authUser && !!ride.driverId && ride.driverId === authUser.id;
   const isCompleted = !!ride.completed || ride.date < todayStr;
+  const available = Math.max(0, ride.seats - (ride.bookedSeats ?? 0));
+  const isFull = available <= 0;
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -154,7 +196,11 @@ export function RideDetails() {
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Users className="w-4 h-4" />
-                  <span>{ride.seats} {ride.seats === 1 ? "seat" : "seats"} available</span>
+                  {isFull ? (
+                    <span className="text-destructive">Seats full</span>
+                  ) : (
+                    <span>{available} {available === 1 ? "seat" : "seats"} available</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -199,6 +245,71 @@ export function RideDetails() {
                   >
                     Remove ride
                   </button>
+
+                  {/* Riders who booked this ride */}
+                  <div className="mt-6 pt-6 border-t border-border text-left">
+                    <p className="font-medium mb-3">
+                      Riders{" "}
+                      <span className="text-muted-foreground font-normal">
+                        ({ride.bookedSeats ?? 0}/{ride.seats} seats booked)
+                      </span>
+                    </p>
+                    {riders.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No riders yet.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {riders.map((r) => (
+                          <div
+                            key={r.id}
+                            className="flex items-center justify-between gap-2 border border-border rounded-lg p-3"
+                          >
+                            <div className="min-w-0">
+                              <p className="font-medium truncate">{r.passenger_name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {r.seats} {r.seats === 1 ? "seat" : "seats"}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              {r.passenger_phone ? (
+                                <a
+                                  href={`tel:${r.passenger_phone.replace(/[^+\d]/g, "")}`}
+                                  aria-label={`Call ${r.passenger_name}`}
+                                  className="w-9 h-9 rounded-full bg-primary flex items-center justify-center hover:bg-primary/90 transition-colors"
+                                >
+                                  <Phone className="w-4 h-4 text-primary-foreground" />
+                                </a>
+                              ) : (
+                                <span
+                                  className="w-9 h-9 rounded-full bg-muted flex items-center justify-center"
+                                  title="No phone on file"
+                                >
+                                  <Phone className="w-4 h-4 text-muted-foreground" />
+                                </span>
+                              )}
+                              <button
+                                onClick={() => handleRemoveRider(r.id)}
+                                className="text-xs font-medium px-3 py-1.5 rounded-lg text-destructive hover:bg-destructive/10 transition-colors"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : isFull ? (
+                <>
+                  <button
+                    disabled
+                    className="w-full bg-muted text-muted-foreground py-3 rounded-lg font-medium cursor-not-allowed mb-3"
+                  >
+                    Seats full
+                  </button>
+                  <p className="text-sm text-muted-foreground text-center">
+                    This ride is fully booked.
+                  </p>
                 </>
               ) : (
                 <>
@@ -218,8 +329,8 @@ export function RideDetails() {
                       <span className="w-6 text-center font-semibold text-lg">{passengers}</span>
                       <button
                         type="button"
-                        onClick={() => setPassengers((n) => Math.min(ride.seats, n + 1))}
-                        disabled={passengers >= ride.seats}
+                        onClick={() => setPassengers((n) => Math.min(available, n + 1))}
+                        disabled={passengers >= available}
                         aria-label="Add passenger"
                         className="w-9 h-9 rounded-full border border-primary flex items-center justify-center hover:bg-primary/10 transition-colors disabled:opacity-40"
                       >

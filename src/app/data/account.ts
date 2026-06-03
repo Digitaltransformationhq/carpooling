@@ -40,7 +40,7 @@ export async function fetchMyTrips(userId: string): Promise<Trip[]> {
   const [ridesRes, bookingsRes] = await Promise.all([
     supabase
       .from("rides")
-      .select("id, from_location, to_location, travel_date, seats, completed")
+      .select("id, from_location, to_location, travel_date, seats, completed, booked_seats")
       .eq("user_id", userId)
       .order("travel_date", { ascending: true }),
     supabase
@@ -58,7 +58,7 @@ export async function fetchMyTrips(userId: string): Promise<Trip[]> {
     to: r.to_location,
     date: r.travel_date,
     completed: Boolean(r.completed),
-    detail: `${r.seats} ${r.seats === 1 ? "seat" : "seats"} offered`,
+    detail: `${Math.max(0, r.seats - (r.booked_seats ?? 0))} of ${r.seats} seats left`,
   }));
 
   const passengerTrips: Trip[] = ((bookingsRes.data as any[]) ?? [])

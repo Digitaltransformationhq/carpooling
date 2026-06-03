@@ -20,6 +20,7 @@ interface RideRow {
   car_model: string;
   preferences: string[] | null;
   completed?: boolean | null;
+  booked_seats?: number | null;
 }
 
 function mapRow(r: RideRow): Ride {
@@ -43,6 +44,7 @@ function mapRow(r: RideRow): Ride {
     carModel: r.car_model,
     preferences: r.preferences ?? [],
     completed: Boolean(r.completed),
+    bookedSeats: r.booked_seats ?? 0,
   };
 }
 
@@ -166,13 +168,53 @@ export async function markRideComplete(rideId: string): Promise<void> {
   if (error) throw error;
 }
 
+export interface RideBooking {
+  id: string;
+  passenger_name: string;
+  passenger_phone: string | null;
+  seats: number;
+}
+
 export async function createBooking(rideId: string, seats = 1): Promise<void> {
   if (!supabase) {
     throw new Error("Supabase isn't connected yet — add your keys to .env to book a seat.");
   }
-  const me = await currentUser();
-  const { error } = await supabase
+  const { data: auth } = await supabase.auth.getUser();
+  const user = auth.user;
+  if (!user) throw new Error("Please sign in to book a seat.");
+
+  const { data: prof } = await supabase
+    .from("profiles")
+    .select("full_name, phone")
+    .eq("id", user.id)
+    .maybeSingle();
+  const name = prof?.full_name || user.email?.split("@")[0] || "Guest";
+
+  const { error } = await supabase.from("bookings").insert({
+    ride_id: rideId,
+    seats,
+    passenger_name: name,
+    passenger_phone: prof?.phone ?? null,
+    user_id: user.id,
+  });
+  if (error) throw error;
+}
+
+/** Riders who booked a ride (visible to the ride's driver). */
+export async function fetchRideBookings(rideId: string): Promise<RideBooking[]> {
+  if (!supabase) return [];
+  const { data, error } = await supabase
     .from("bookings")
-    .insert({ ride_id: rideId, seats, passenger_name: me.name, user_id: me.id });
+    .select("id, passenger_name, passenger_phone, seats")
+    .eq("ride_id", rideId)
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data as RideBooking[]) ?? [];
+}
+
+/** Cancel a booking — by the rider (cancel) or the driver (remove rider). Frees the seat(s). */
+export async function removeBooking(bookingId: string): Promise<void> {
+  if (!supabase) throw new Error("Supabase isn't connected.");
+  const { error } = await supabase.from("bookings").delete().eq("id", bookingId);
   if (error) throw error;
 }

@@ -18,6 +18,7 @@ export interface Ride {
   carModel: string;
   preferences: string[];
   completed?: boolean;
+  bookedSeats?: number;
 }
 
 export const mockRides: Ride[] = [

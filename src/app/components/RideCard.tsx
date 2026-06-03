@@ -8,6 +8,7 @@ interface RideCardProps {
 }
 
 export function RideCard({ ride }: RideCardProps) {
+  const available = Math.max(0, ride.seats - (ride.bookedSeats ?? 0));
   return (
     <Link
       to={`/ride/${ride.id}`}
@@ -70,7 +71,11 @@ export function RideCard({ ride }: RideCardProps) {
         </div>
         <div className="flex items-center gap-1.5">
           <Users className="w-4 h-4" />
-          <span>{ride.seats} {ride.seats === 1 ? "seat" : "seats"} left</span>
+          {available > 0 ? (
+            <span>{available} {available === 1 ? "seat" : "seats"} left</span>
+          ) : (
+            <span className="text-destructive font-semibold">Seats full</span>
+          )}
         </div>
       </div>
     </Link>
