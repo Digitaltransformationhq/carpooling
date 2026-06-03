@@ -1,19 +1,22 @@
 import { Suspense, lazy, useEffect, useState } from "react";
+import { Link } from "react-router";
 import { SearchBar } from "../components/SearchBar";
 import { RideCard } from "../components/RideCard";
 import { Ride } from "../data/mockData";
 import { fetchRecentRides } from "../data/rides";
-import { Leaf, DollarSign, Users, Shield, MapPin } from "lucide-react";
+import { Leaf, DollarSign, Users, Shield, MapPin, Car } from "lucide-react";
 
 const RidesMap = lazy(() => import("../components/RidesMap"));
 
 export function Home() {
   const [featuredRides, setFeaturedRides] = useState<Ride[]>([]);
+  const [loadingRides, setLoadingRides] = useState(true);
 
   useEffect(() => {
     fetchRecentRides(10)
       .then(setFeaturedRides)
-      .catch(() => setFeaturedRides([]));
+      .catch(() => setFeaturedRides([]))
+      .finally(() => setLoadingRides(false));
   }, []);
 
   return (
@@ -42,11 +45,40 @@ export function Home() {
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold mb-8">Rides Leaving Soon</h2>
-          <div className="space-y-4">
-            {featuredRides.map((ride) => (
-              <RideCard key={ride.id} ride={ride} />
-            ))}
-          </div>
+
+          {loadingRides ? (
+            <div className="space-y-4">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="bg-card border border-border rounded-xl h-32 animate-pulse"
+                />
+              ))}
+            </div>
+          ) : featuredRides.length === 0 ? (
+            <div className="bg-card border border-primary rounded-xl p-10 text-center">
+              <div className="inline-flex items-center justify-center w-14 h-14 bg-primary/15 rounded-full mb-4">
+                <Car className="w-7 h-7 text-primary" />
+              </div>
+              <p className="font-semibold text-lg mb-1">No rides leaving soon yet</p>
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                Be the first to share a ride — publish your trip and help others travel while
+                splitting the cost.
+              </p>
+              <Link
+                to="/publish"
+                className="inline-block bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors"
+              >
+                Publish a ride
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {featuredRides.map((ride) => (
+                <RideCard key={ride.id} ride={ride} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
