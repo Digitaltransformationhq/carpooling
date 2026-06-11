@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Navigate } from "react-router";
 import { MapPin, Calendar, Clock, Users, Car, Bike } from "lucide-react";
 import { createRide } from "../data/rides";
+import { LocationInput } from "../components/LocationInput";
 import { useAuth } from "../context/AuthContext";
 
 // local YYYY-MM-DD (today) — used as the earliest selectable date
@@ -55,6 +56,9 @@ export function PublishRide() {
     });
   };
 
+  const setField = (name: "from" | "to", value: string) =>
+    setFormData((f) => ({ ...f, [name]: value }));
+
   // Must be signed in to publish, so the ride is tied to your account
   // (and shows up under "My Rides").
   if (configured && !loading && !user) {
@@ -83,14 +87,11 @@ export function PublishRide() {
                     <MapPin className="w-4 h-4" />
                     Leaving from
                   </label>
-                  <input
-                    type="text"
-                    name="from"
+                  <LocationInput
                     value={formData.from}
-                    onChange={handleChange}
-                    placeholder="City, address, station..."
-                    className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    onChange={(v) => setField("from", v)}
                     required
+                    showCurrentLocation
                   />
                 </div>
 
@@ -99,13 +100,9 @@ export function PublishRide() {
                     <MapPin className="w-4 h-4" />
                     Going to
                   </label>
-                  <input
-                    type="text"
-                    name="to"
+                  <LocationInput
                     value={formData.to}
-                    onChange={handleChange}
-                    placeholder="City, address, station..."
-                    className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    onChange={(v) => setField("to", v)}
                     required
                   />
                 </div>

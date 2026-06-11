@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { MapPin, Calendar, Users, Search } from "lucide-react";
+import { LocationInput } from "./LocationInput";
 
 interface SearchBarProps {
   variant?: "hero" | "compact";
@@ -28,25 +29,16 @@ export function SearchBar({ variant = "hero" }: SearchBarProps) {
     return (
       <form onSubmit={handleSearch} className="bg-card border border-primary rounded-lg shadow-lg p-4">
         <div className="flex flex-col sm:flex-row gap-3">
-          <div className="flex-1 relative">
-            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="From"
+          <div className="flex-1">
+            <LocationInput
               value={from}
-              onChange={(e) => setFrom(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              onChange={setFrom}
+              placeholder="From"
+              showCurrentLocation
             />
           </div>
-          <div className="flex-1 relative">
-            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="To"
-              value={to}
-              onChange={(e) => setTo(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            />
+          <div className="flex-1">
+            <LocationInput value={to} onChange={setTo} placeholder="To" />
           </div>
           <button
             type="submit"
@@ -68,13 +60,11 @@ export function SearchBar({ variant = "hero" }: SearchBarProps) {
             <MapPin className="w-4 h-4" />
             Leaving from
           </label>
-          <input
-            type="text"
-            placeholder="City, address, station..."
+          <LocationInput
             value={from}
-            onChange={(e) => setFrom(e.target.value)}
-            className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            onChange={setFrom}
             required
+            showCurrentLocation
           />
         </div>
 
@@ -83,14 +73,7 @@ export function SearchBar({ variant = "hero" }: SearchBarProps) {
             <MapPin className="w-4 h-4" />
             Going to
           </label>
-          <input
-            type="text"
-            placeholder="City, address, station..."
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
-            className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            required
-          />
+          <LocationInput value={to} onChange={setTo} required />
         </div>
 
         <div className="space-y-2">
