@@ -29,6 +29,7 @@ interface AuthContextValue {
     phone: string
   ) => Promise<{ needsConfirmation: boolean }>;
   resendConfirmation: (email: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -98,6 +99,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
   };
 
+  const signInWithGoogle = async () => {
+    if (!supabase) throw new Error("Supabase isn't connected.");
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      // Return to the profile page after Google sends the user back.
+      options: { redirectTo: `${window.location.origin}/profile` },
+    });
+    if (error) throw error;
+  };
+
   const signOut = async () => {
     if (!supabase) return;
     await supabase.auth.signOut();
@@ -115,6 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signUp,
         resendConfirmation,
+        signInWithGoogle,
         signOut,
       }}
     >
