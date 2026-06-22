@@ -44,12 +44,21 @@ language plpgsql
 security definer set search_path = public
 as $$
 begin
-  insert into public.profiles (id, full_name, email, phone)
+  -- Email/password signups send 'full_name'; Google OAuth sends 'name' +
+  -- 'picture'. coalesce() picks whichever the provider supplied.
+  insert into public.profiles (id, full_name, email, phone, avatar_url)
   values (
     new.id,
-    new.raw_user_meta_data->>'full_name',
+    coalesce(
+      new.raw_user_meta_data->>'full_name',
+      new.raw_user_meta_data->>'name'
+    ),
     new.email,
-    new.raw_user_meta_data->>'phone'
+    new.raw_user_meta_data->>'phone',
+    coalesce(
+      new.raw_user_meta_data->>'avatar_url',
+      new.raw_user_meta_data->>'picture'
+    )
   )
   on conflict (id) do nothing;
   return new;
