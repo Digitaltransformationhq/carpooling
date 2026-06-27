@@ -159,6 +159,9 @@ export interface NewRideInput {
   vehicleType: "2-wheeler" | "4-wheeler";
   seats: number;
   preferences?: string[];
+  /** Exact coordinates from the address picker (skips re-geocoding the text). */
+  fromCoords?: { lat: number; lng: number } | null;
+  toCoords?: { lat: number; lng: number } | null;
 }
 
 /** Current signed-in user's id + display name (null when logged out). */
@@ -182,7 +185,11 @@ export async function createRide(input: NewRideInput): Promise<Ride> {
   // ride can be matched along its 500m corridor. Failures don't block publish.
   let route: Polyline | null = null;
   try {
-    const [a, b] = await Promise.all([geocode(input.from), geocode(input.to)]);
+    // Prefer the exact coordinates the user picked; fall back to geocoding text.
+    const [a, b] = await Promise.all([
+      input.fromCoords ?? geocode(input.from),
+      input.toCoords ?? geocode(input.to),
+    ]);
     if (a && b) route = await routeBetween(a, b);
   } catch {
     route = null;
@@ -199,7 +206,8 @@ export async function createRide(input: NewRideInput): Promise<Ride> {
     to_location: input.to,
     travel_date: input.date,
     departure_time: input.time,
-    // money was removed from the app — kept at 0 until a new concept lands
+    // rides are free — the app rewards sharing with points (see supabase/rewards.sql),
+    // not money. the price column stays at 0 for schema compatibility.
     price: 0,
     // a two-wheeler only carries one passenger
     seats: input.vehicleType === "2-wheeler" ? 1 : input.seats,

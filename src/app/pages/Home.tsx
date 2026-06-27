@@ -4,7 +4,7 @@ import { SearchBar } from "../components/SearchBar";
 import { RideCard } from "../components/RideCard";
 import { Ride } from "../data/mockData";
 import { fetchRecentRides } from "../data/rides";
-import { Leaf, DollarSign, Users, Shield, MapPin, Car } from "lucide-react";
+import { Leaf, Award, Users, BadgeCheck, MapPin, Car, Gift, Search } from "lucide-react";
 
 const RidesMap = lazy(() => import("../components/RidesMap"));
 
@@ -31,11 +31,28 @@ export function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
-              Your Pick of Rides at Low Prices
+              Share Rides, Earn Rewards
             </h1>
-            <p className="text-xl text-white/90 max-w-2xl mx-auto">
-              Save money, make friends, and travel sustainably
+            <p className="text-xl text-white/90 max-w-2xl mx-auto mb-8">
+              Collect points every time you publish or join a ride — make friends and travel
+              sustainably
             </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link
+                to="/search"
+                className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-8 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors shadow-lg shadow-primary/30"
+              >
+                <Search className="w-5 h-5" />
+                Find a Ride
+              </Link>
+              <Link
+                to="/publish"
+                className="inline-flex items-center justify-center gap-2 bg-white/10 text-white border border-white/40 backdrop-blur px-8 py-3 rounded-lg font-medium hover:bg-white/20 transition-colors"
+              >
+                <Car className="w-5 h-5" />
+                Publish a Ride
+              </Link>
+            </div>
           </div>
           <SearchBar variant="hero" />
         </div>
@@ -62,8 +79,8 @@ export function Home() {
               </div>
               <p className="font-semibold text-lg mb-1">No rides leaving soon yet</p>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                Be the first to share a ride — publish your trip and help others travel while
-                splitting the cost.
+                Be the first to share a ride — publish your trip, help others travel, and earn 2
+                reward points.
               </p>
               <Link
                 to="/publish"
@@ -85,15 +102,19 @@ export function Home() {
       {/* Features Section */}
       <section className="py-16 bg-muted/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center mb-12">Why Choose RideShare?</h2>
+          <h2 className="text-3xl font-bold text-center mb-3">Why CAs Choose RideShare</h2>
+          <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
+            A carpooling community built exclusively for Chartered Accountants — share rides, earn
+            rewards, and connect with your peers.
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="text-center">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
-                <DollarSign className="w-8 h-8 text-primary" />
+                <Award className="w-8 h-8 text-primary" />
               </div>
-              <h3 className="font-semibold mb-2">Save Money</h3>
+              <h3 className="font-semibold mb-2">Earn Reward Points</h3>
               <p className="text-sm text-muted-foreground">
-                Travel at much lower cost than other options
+                Get 2 points for every ride you publish and 1 for each ride you join
               </p>
             </div>
 
@@ -101,9 +122,9 @@ export function Home() {
               <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
                 <Users className="w-8 h-8 text-primary" />
               </div>
-              <h3 className="font-semibold mb-2">Meet People</h3>
+              <h3 className="font-semibold mb-2">Connect with Fellow CAs</h3>
               <p className="text-sm text-muted-foreground">
-                Connect with interesting people during your journey
+                Find and reach out to other CAs on the platform through Peer Connect
               </p>
             </div>
 
@@ -111,19 +132,55 @@ export function Home() {
               <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
                 <Leaf className="w-8 h-8 text-primary" />
               </div>
-              <h3 className="font-semibold mb-2">Eco-Friendly</h3>
+              <h3 className="font-semibold mb-2">Travel Greener Together</h3>
               <p className="text-sm text-muted-foreground">
-                Reduce your carbon footprint by sharing rides
+                Share seats with peers heading your way and cut down on emissions
               </p>
             </div>
 
             <div className="text-center">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
-                <Shield className="w-8 h-8 text-primary" />
+                <BadgeCheck className="w-8 h-8 text-primary" />
               </div>
-              <h3 className="font-semibold mb-2">Safe & Secure</h3>
+              <h3 className="font-semibold mb-2">Verified CA Community</h3>
               <p className="text-sm text-muted-foreground">
-                Verified drivers and secure payment system
+                Every member joins with their ICAI Membership ID — travel with people you trust
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Rewards Section */}
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <Gift className="w-7 h-7 text-primary" />
+            <h2 className="text-3xl font-bold text-center">How Rewards Work</h2>
+          </div>
+          <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
+            No fares, no payments — just points. Every shared ride earns you reward points you can
+            be proud of.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            <div className="bg-card border border-primary rounded-xl p-8 text-center">
+              <div className="inline-flex items-center justify-center w-14 h-14 bg-primary/15 rounded-full mb-4">
+                <Car className="w-7 h-7 text-primary" />
+              </div>
+              <div className="text-4xl font-bold text-primary mb-1">+2</div>
+              <h3 className="font-semibold mb-2">Publish a ride</h3>
+              <p className="text-sm text-muted-foreground">
+                Offer your empty seats and earn 2 points for every trip you share.
+              </p>
+            </div>
+            <div className="bg-card border border-primary rounded-xl p-8 text-center">
+              <div className="inline-flex items-center justify-center w-14 h-14 bg-primary/15 rounded-full mb-4">
+                <Users className="w-7 h-7 text-primary" />
+              </div>
+              <div className="text-4xl font-bold text-primary mb-1">+1</div>
+              <h3 className="font-semibold mb-2">Join a ride</h3>
+              <p className="text-sm text-muted-foreground">
+                Hop in as a passenger and earn 1 point each time your seat is confirmed.
               </p>
             </div>
           </div>
@@ -131,7 +188,7 @@ export function Home() {
       </section>
 
       {/* Map Section */}
-      <section className="py-16">
+      <section className="py-16 bg-muted/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2 mb-2">
             <MapPin className="w-7 h-7 text-primary" />

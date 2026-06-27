@@ -139,11 +139,22 @@ export function RideDetails() {
       navigate("/login");
       return;
     }
+    // Don't let a rider request more seats than the ride actually has left,
+    // counting their own pending requests (which aren't reserved yet).
+    const avail = Math.max(0, ride.seats - (ride.bookedSeats ?? 0));
+    const myPend = myBookings
+      .filter((b) => b.status === "pending")
+      .reduce((sum, b) => sum + b.seats, 0);
+    const seats = Math.min(passengers, Math.max(0, avail - myPend));
+    if (seats < 1) {
+      alert("You can't request more seats than are available on this ride.");
+      return;
+    }
     setBooking(true);
     try {
-      await requestBooking(ride.id, passengers);
+      await requestBooking(ride.id, seats);
       alert(
-        `Request sent for ${passengers} ${passengers === 1 ? "seat" : "seats"}! ` +
+        `Request sent for ${seats} ${seats === 1 ? "seat" : "seats"}! ` +
           "The driver will confirm it shortly."
       );
       await refreshRide(ride.id);
@@ -243,6 +254,8 @@ export function RideDetails() {
     .filter((b) => b.status === "pending")
     .reduce((sum, b) => sum + b.seats, 0);
   const mySeats = myAccepted + myPending;
+  // seats this rider can still request: what's left, minus their own pending
+  const maxRequestable = Math.max(0, available - myPending);
   const pendingRiders = riders.filter((r) => r.status === "pending");
   const acceptedRiders = riders.filter((r) => r.status === "accepted");
   const isStarted = !!ride.started && !isCompleted;
@@ -564,65 +577,75 @@ export function RideDetails() {
                     </div>
                   )}
 
-                  {isFull ? (
+                  {maxRequestable <= 0 ? (
                     <>
                       <button
                         disabled
                         className="w-full bg-muted text-muted-foreground py-3 rounded-lg font-medium cursor-not-allowed"
                       >
-                        Seats full
+                        {isFull ? "Seats full" : "Request limit reached"}
                       </button>
-                      {mySeats === 0 && (
+                      {isFull && mySeats === 0 && (
                         <p className="text-sm text-muted-foreground text-center mt-3">
                           This ride is fully booked.
+                        </p>
+                      )}
+                      {!isFull && (
+                        <p className="text-sm text-muted-foreground text-center mt-3">
+                          You've already requested all available seats. Cancel a request to change
+                          it.
                         </p>
                       )}
                     </>
                   ) : (
                     <>
                       {/* Passenger selector */}
-                  <div className="flex items-center justify-between mb-5">
-                    <span className="text-sm font-medium">Passengers</span>
-                    <div className="flex items-center gap-4">
+                      <div className="flex items-center justify-between mb-5">
+                        <span className="text-sm font-medium">Passengers</span>
+                        <div className="flex items-center gap-4">
+                          <button
+                            type="button"
+                            onClick={() => setPassengers((n) => Math.max(1, n - 1))}
+                            disabled={passengers <= 1}
+                            aria-label="Remove passenger"
+                            className="w-9 h-9 rounded-full border border-primary flex items-center justify-center hover:bg-primary/10 transition-colors disabled:opacity-40"
+                          >
+                            <Minus className="w-4 h-4" />
+                          </button>
+                          <span className="w-6 text-center font-semibold text-lg">
+                            {Math.min(passengers, maxRequestable)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setPassengers((n) => Math.min(maxRequestable, n + 1))}
+                            disabled={passengers >= maxRequestable}
+                            aria-label="Add passenger"
+                            className="w-9 h-9 rounded-full border border-primary flex items-center justify-center hover:bg-primary/10 transition-colors disabled:opacity-40"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between border-t border-border py-3 mb-6">
+                        <span className="font-semibold">Seats requested</span>
+                        <span className="font-bold text-lg">
+                          {Math.min(passengers, maxRequestable)}
+                        </span>
+                      </div>
+
                       <button
-                        type="button"
-                        onClick={() => setPassengers((n) => Math.max(1, n - 1))}
-                        disabled={passengers <= 1}
-                        aria-label="Remove passenger"
-                        className="w-9 h-9 rounded-full border border-primary flex items-center justify-center hover:bg-primary/10 transition-colors disabled:opacity-40"
+                        onClick={handleRequest}
+                        disabled={booking}
+                        className="w-full bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors mb-3 disabled:opacity-60"
                       >
-                        <Minus className="w-4 h-4" />
+                        {booking ? "Sending request…" : "Request to join"}
                       </button>
-                      <span className="w-6 text-center font-semibold text-lg">{passengers}</span>
-                      <button
-                        type="button"
-                        onClick={() => setPassengers((n) => Math.min(available, n + 1))}
-                        disabled={passengers >= available}
-                        aria-label="Add passenger"
-                        className="w-9 h-9 rounded-full border border-primary flex items-center justify-center hover:bg-primary/10 transition-colors disabled:opacity-40"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
 
-                  <div className="flex justify-between border-t border-border py-3 mb-6">
-                    <span className="font-semibold">Seats requested</span>
-                    <span className="font-bold text-lg">{passengers}</span>
-                  </div>
-
-                  <button
-                    onClick={handleRequest}
-                    disabled={booking}
-                    className="w-full bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors mb-3 disabled:opacity-60"
-                  >
-                    {booking ? "Sending request…" : "Request to join"}
-                  </button>
-
-                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                    <Shield className="w-4 h-4" />
-                    <span>The driver reviews and confirms your seat</span>
-                  </div>
+                      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                        <Shield className="w-4 h-4" />
+                        <span>The driver reviews and confirms your seat</span>
+                      </div>
                     </>
                   )}
                 </>

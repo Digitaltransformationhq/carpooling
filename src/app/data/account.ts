@@ -3,6 +3,8 @@ import { supabase } from "../lib/supabase";
 export interface UserStats {
   ridesAsDriver: number;
   ridesAsPassenger: number;
+  /** Reward points: +2 per published ride, +1 per confirmed seat. */
+  points: number;
 }
 
 export interface Trip {
@@ -20,18 +22,21 @@ export interface Trip {
 const EMPTY_STATS: UserStats = {
   ridesAsDriver: 0,
   ridesAsPassenger: 0,
+  points: 0,
 };
 
 export async function fetchUserStats(userId: string): Promise<UserStats> {
   if (!supabase) return EMPTY_STATS;
-  const [drivers, passengers] = await Promise.all([
+  const [drivers, passengers, profile] = await Promise.all([
     supabase.from("rides").select("id", { count: "exact", head: true }).eq("user_id", userId),
     supabase.from("bookings").select("id", { count: "exact", head: true }).eq("user_id", userId),
+    supabase.from("profiles").select("points").eq("id", userId).maybeSingle(),
   ]);
 
   return {
     ridesAsDriver: drivers.count ?? 0,
     ridesAsPassenger: passengers.count ?? 0,
+    points: (profile.data?.points as number | undefined) ?? 0,
   };
 }
 

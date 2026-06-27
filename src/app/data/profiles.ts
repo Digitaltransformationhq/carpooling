@@ -5,16 +5,47 @@ export interface Profile {
   full_name: string | null;
   email: string | null;
   phone: string | null;
+  membership_id: string | null;
   bio: string | null;
   avatar_url: string | null;
+  points: number;
+  is_admin: boolean;
   created_at: string;
 }
 
 export interface ProfileUpdate {
   full_name?: string;
   phone?: string;
+  membership_id?: string;
   bio?: string;
   avatar_url?: string;
+}
+
+/** A member as shown in the Peer Connect directory — never includes is_admin. */
+export type DirectoryProfile = Omit<Profile, "is_admin">;
+
+// Only the columns the directory actually displays (no is_admin — don't leak
+// who the admins are to every signed-in member).
+const DIRECTORY_COLUMNS = "id, full_name, email, phone, membership_id, bio, avatar_url, points, created_at";
+
+/**
+ * Search the member directory (Peer Connect). Empty query returns recent
+ * members; a query matches on name (case-insensitive). Skips `excludeId`
+ * (typically the current user) and rows without a name.
+ */
+export async function searchProfiles(query = "", excludeId?: string): Promise<DirectoryProfile[]> {
+  if (!supabase) return [];
+  let q = supabase.from("profiles").select(DIRECTORY_COLUMNS).not("full_name", "is", null);
+  // Strip characters that are meaningful in PostgREST filter syntax so the
+  // search term can't break out of / inject into the .or() expression.
+  const term = query.trim().replace(/[,()*%:\\]/g, "").slice(0, 80);
+  // match on name OR membership ID
+  if (term) q = q.or(`full_name.ilike.%${term}%,membership_id.ilike.%${term}%`);
+  const { data, error } = await q.order("full_name", { ascending: true }).limit(100);
+  if (error) throw error;
+  let list = (data as unknown as DirectoryProfile[]) ?? [];
+  if (excludeId) list = list.filter((p) => p.id !== excludeId);
+  return list;
 }
 
 export async function fetchProfile(userId: string): Promise<Profile | null> {

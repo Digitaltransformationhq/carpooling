@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Navigate, useNavigate } from "react-router";
-import { MapPin, Calendar, Edit2, Car, Camera } from "lucide-react";
+import { MapPin, Calendar, Edit2, Car, Camera, Award } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import {
   fetchProfile,
@@ -20,13 +20,14 @@ export function Profile() {
   const { user: authUser, loading, configured, refreshProfile } = useAuth();
 
   const [profile, setProfile] = useState<DBProfile | null>(null);
-  const [form, setForm] = useState({ full_name: "", phone: "" });
+  const [form, setForm] = useState({ full_name: "", phone: "", membership_id: "" });
   const [saving, setSaving] = useState(false);
   const [savedMsg, setSavedMsg] = useState("");
 
   const [stats, setStats] = useState<UserStats>({
     ridesAsDriver: 0,
     ridesAsPassenger: 0,
+    points: 0,
   });
   const [trips, setTrips] = useState<Trip[]>([]);
   const [avatarUrl, setAvatarUrl] = useState(AVATAR);
@@ -40,7 +41,11 @@ export function Profile() {
         const fullName =
           p?.full_name ?? (authUser.user_metadata?.full_name as string) ?? "";
         setProfile(p);
-        setForm({ full_name: fullName, phone: p?.phone ?? "" });
+        setForm({
+          full_name: fullName,
+          phone: p?.phone ?? "",
+          membership_id: p?.membership_id ?? "",
+        });
         if (p?.avatar_url) setAvatarUrl(p.avatar_url);
       })
       .catch(() => {
@@ -134,6 +139,7 @@ export function Profile() {
       const updated = await updateProfile(authUser.id, {
         full_name: form.full_name.trim(),
         phone: form.phone.trim(),
+        membership_id: form.membership_id.trim(),
       });
       setProfile(updated);
       setSavedMsg("Profile saved!");
@@ -200,7 +206,7 @@ export function Profile() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t">
+          <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t">
             <div className="text-center">
               <div className="text-2xl font-bold">{stats.ridesAsDriver}</div>
               <div className="text-sm text-muted-foreground">Rides as Driver</div>
@@ -209,7 +215,18 @@ export function Profile() {
               <div className="text-2xl font-bold">{stats.ridesAsPassenger}</div>
               <div className="text-sm text-muted-foreground">Rides as Passenger</div>
             </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold flex items-center justify-center gap-1.5 text-primary">
+                <Award className="w-6 h-6" />
+                {stats.points}
+              </div>
+              <div className="text-sm text-muted-foreground">Reward Points</div>
+            </div>
           </div>
+          <p className="text-xs text-muted-foreground text-center mt-3">
+            Earn <span className="font-medium text-foreground">2 points</span> for publishing a ride
+            and <span className="font-medium text-foreground">1 point</span> for joining one.
+          </p>
         </div>
 
         {/* Tabs */}
@@ -374,6 +391,16 @@ export function Profile() {
                 <div>
                   <h2 className="text-xl font-semibold mb-4">Edit Profile</h2>
                   <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Membership ID</label>
+                      <input
+                        type="text"
+                        value={form.membership_id}
+                        onChange={(e) => setForm({ ...form, membership_id: e.target.value })}
+                        placeholder="e.g. 123456"
+                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                    </div>
                     <div>
                       <label className="block text-sm font-medium mb-2">Full name</label>
                       <input

@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { useNavigate, Navigate } from "react-router";
-import { MapPin, Calendar, Clock, Users, Car, Bike } from "lucide-react";
+import { useNavigate, Navigate, useSearchParams } from "react-router";
+import { MapPin, Calendar, Clock, Users, LocateFixed, Loader2, ChevronDown } from "lucide-react";
 import { createRide } from "../data/rides";
-import { LocationInput } from "../components/LocationInput";
+import { detectCurrentLocation, type LatLng } from "../lib/geo";
+import { PlaceAutocomplete } from "../components/PlaceAutocomplete";
+import { EventDatePicker } from "../components/EventDatePicker";
 import { useAuth } from "../context/AuthContext";
 
 // local YYYY-MM-DD (today) — used as the earliest selectable date
@@ -15,31 +17,45 @@ function todayLocal(): string {
 
 export function PublishRide() {
   const navigate = useNavigate();
-  const { user, loading, configured } = useAuth();
+  const { user, loading, configured, refreshProfile } = useAuth();
   const [submitting, setSubmitting] = useState(false);
+  const [locating, setLocating] = useState(false);
+  // Exact coordinates captured when a place is picked from the dropdown / detected.
+  const [fromCoords, setFromCoords] = useState<LatLng | null>(null);
+  const [toCoords, setToCoords] = useState<LatLng | null>(null);
+  // Pre-fill destination + date when arriving from a calendar event.
+  const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState({
     from: "",
-    to: "",
-    date: "",
-    time: "",
+    to: searchParams.get("to") ?? "",
+    date: searchParams.get("date") ?? "",
+    hour: "",
+    minute: "",
+    ampm: "AM",
     vehicleType: "4-wheeler" as "2-wheeler" | "4-wheeler",
     seats: "1",
   });
 
-  const isTwoWheeler = formData.vehicleType === "2-wheeler";
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.date) {
+      alert("Please select a travel date.");
+      return;
+    }
     setSubmitting(true);
     try {
       const ride = await createRide({
         from: formData.from.trim(),
         to: formData.to.trim(),
         date: formData.date,
-        time: formData.time,
+        // store a 12-hour value (e.g. "7:05 PM") — what formatTime + search filtering expect
+        time: `${formData.hour}:${formData.minute} ${formData.ampm}`,
         vehicleType: formData.vehicleType,
-        seats: isTwoWheeler ? 1 : Number(formData.seats),
+        seats: Number(formData.seats),
+        fromCoords,
+        toCoords,
       });
+      refreshProfile(); // reflect the +2 reward points in the navbar
       alert("Ride published successfully!");
       navigate(`/ride/${ride.id}`);
     } catch (err) {
@@ -56,8 +72,24 @@ export function PublishRide() {
     });
   };
 
-  const setField = (name: "from" | "to", value: string) =>
-    setFormData((f) => ({ ...f, [name]: value }));
+  const handleDetectLocation = async () => {
+    setLocating(true);
+    try {
+      const { label, coords, accuracy } = await detectCurrentLocation();
+      setFormData((f) => ({ ...f, from: label }));
+      setFromCoords(coords);
+      if (accuracy > 1000) {
+        alert(
+          `Your location was only accurate to ~${Math.round(accuracy / 1000)} km ` +
+            `(this device has no GPS). Please double-check or edit the "Leaving from" field.`
+        );
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Could not determine your location");
+    } finally {
+      setLocating(false);
+    }
+  };
 
   // Must be signed in to publish, so the ride is tied to your account
   // (and shows up under "My Rides").
@@ -83,15 +115,39 @@ export function PublishRide() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-medium">
-                    <MapPin className="w-4 h-4" />
-                    Leaving from
-                  </label>
-                  <LocationInput
+                  <div className="flex items-center justify-between gap-2">
+                    <label className="flex items-center gap-2 text-sm font-medium">
+                      <MapPin className="w-4 h-4" />
+                      Leaving from
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleDetectLocation}
+                      disabled={locating}
+                      className="flex items-center gap-1 text-xs text-primary hover:underline disabled:opacity-60"
+                    >
+                      {locating ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <LocateFixed className="w-3.5 h-3.5" />
+                      )}
+                      {locating ? "Detecting…" : "Use my location"}
+                    </button>
+                  </div>
+                  <PlaceAutocomplete
+                    name="from"
                     value={formData.from}
-                    onChange={(v) => setField("from", v)}
+                    onChange={(text) => {
+                      setFormData((f) => ({ ...f, from: text }));
+                      setFromCoords(null);
+                    }}
+                    onSelect={({ label, coords }) => {
+                      setFormData((f) => ({ ...f, from: label }));
+                      setFromCoords(coords);
+                    }}
+                    placeholder="City, address, station..."
+                    className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     required
-                    showCurrentLocation
                   />
                 </div>
 
@@ -100,9 +156,19 @@ export function PublishRide() {
                     <MapPin className="w-4 h-4" />
                     Going to
                   </label>
-                  <LocationInput
+                  <PlaceAutocomplete
+                    name="to"
                     value={formData.to}
-                    onChange={(v) => setField("to", v)}
+                    onChange={(text) => {
+                      setFormData((f) => ({ ...f, to: text }));
+                      setToCoords(null);
+                    }}
+                    onSelect={({ label, coords }) => {
+                      setFormData((f) => ({ ...f, to: label }));
+                      setToCoords(coords);
+                    }}
+                    placeholder="City, address, station..."
+                    className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     required
                   />
                 </div>
@@ -114,14 +180,11 @@ export function PublishRide() {
                     <Calendar className="w-4 h-4" />
                     Date
                   </label>
-                  <input
-                    type="date"
-                    name="date"
+                  <EventDatePicker
                     value={formData.date}
-                    onChange={handleChange}
+                    onChange={(d) => setFormData((f) => ({ ...f, date: d }))}
                     min={minDate}
                     className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    required
                   />
                 </div>
 
@@ -130,14 +193,64 @@ export function PublishRide() {
                     <Clock className="w-4 h-4" />
                     Departure time
                   </label>
-                  <input
-                    type="time"
-                    name="time"
-                    value={formData.time}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    required
-                  />
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="relative">
+                      <select
+                        name="hour"
+                        value={formData.hour}
+                        onChange={handleChange}
+                        aria-label="Hour"
+                        className="w-full appearance-none pl-3 pr-8 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        required
+                      >
+                        <option value="" disabled>
+                          Hour
+                        </option>
+                        {Array.from({ length: 12 }, (_, i) => String(i + 1)).map((h) => (
+                          <option key={h} value={h}>
+                            {h}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <div className="relative">
+                      <select
+                        name="minute"
+                        value={formData.minute}
+                        onChange={handleChange}
+                        aria-label="Minute"
+                        className="w-full appearance-none pl-3 pr-8 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        required
+                      >
+                        <option value="" disabled>
+                          Min
+                        </option>
+                        {Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, "0")).map(
+                          (mm) => (
+                            <option key={mm} value={mm}>
+                              {mm}
+                            </option>
+                          )
+                        )}
+                      </select>
+                      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <div className="relative">
+                      <select
+                        name="ampm"
+                        value={formData.ampm}
+                        onChange={handleChange}
+                        aria-label="AM or PM"
+                        className="w-full appearance-none pl-3 pr-8 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        required
+                      >
+                        <option value="AM">AM</option>
+                        <option value="PM">PM</option>
+                      </select>
+                      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -146,71 +259,29 @@ export function PublishRide() {
             <div className="space-y-4 pt-6 border-t">
               <h2 className="text-xl font-semibold">Ride Details</h2>
 
-              {/* Vehicle type */}
-              <div className="space-y-2">
-                <span className="text-sm font-medium">Vehicle type</span>
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormData((f) => ({ ...f, vehicleType: "2-wheeler", seats: "1" }))
-                    }
-                    className={`flex items-center justify-center gap-2 px-4 py-3 border rounded-lg font-medium transition-colors ${
-                      isTwoWheeler
-                        ? "border-primary bg-primary/10 text-foreground"
-                        : "border-border hover:bg-muted/50"
-                    }`}
-                  >
-                    <Bike className="w-5 h-5" />
-                    2-Wheeler
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFormData((f) => ({ ...f, vehicleType: "4-wheeler" }))}
-                    className={`flex items-center justify-center gap-2 px-4 py-3 border rounded-lg font-medium transition-colors ${
-                      !isTwoWheeler
-                        ? "border-primary bg-primary/10 text-foreground"
-                        : "border-border hover:bg-muted/50"
-                    }`}
-                  >
-                    <Car className="w-5 h-5" />
-                    4-Wheeler
-                  </button>
-                </div>
-              </div>
-
               {/* Available seats */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium">
                   <Users className="w-4 h-4" />
                   Available seats
                 </label>
-                {isTwoWheeler ? (
-                  <>
-                    <input
-                      type="text"
-                      value="1 seat"
-                      disabled
-                      className="w-full px-4 py-3 border rounded-lg bg-muted text-muted-foreground cursor-not-allowed"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      A two-wheeler can carry one passenger.
-                    </p>
-                  </>
-                ) : (
+                <div className="relative">
                   <select
                     name="seats"
                     value={formData.seats}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full appearance-none pl-4 pr-10 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     required
                   >
                     <option value="1">1 seat</option>
                     <option value="2">2 seats</option>
                     <option value="3">3 seats</option>
                     <option value="4">4 seats</option>
+                    <option value="5">5 seats</option>
+                    <option value="6">6 seats</option>
                   </select>
-                )}
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                </div>
               </div>
             </div>
 

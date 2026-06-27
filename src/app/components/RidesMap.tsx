@@ -24,6 +24,14 @@ const CITY_COORDS: Record<string, [number, number]> = {
 const START_COLOR = "#4f46e5";
 const END_COLOR = "#c026d3";
 
+/** Escape text before putting it into popup HTML (defends against stored XSS). */
+function esc(s: string): string {
+  return String(s).replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!
+  );
+}
+
 function pinElement(color: string) {
   const el = document.createElement("div");
   el.style.cursor = "pointer";
@@ -93,12 +101,12 @@ export default function RidesMap() {
       const links = ridesFromHere
         .map(
           (r) =>
-            `<a href="/ride/${r.id}" data-ride="${r.id}" style="display:block;color:#4f46e5;font-size:13px;text-decoration:none;margin-top:2px">→ ${r.to}</a>`
+            `<a href="/ride/${encodeURIComponent(r.id)}" data-ride="${esc(r.id)}" style="display:block;color:#4f46e5;font-size:13px;text-decoration:none;margin-top:2px">→ ${esc(r.to)}</a>`
         )
         .join("");
       const html = `
         <div style="font-family:inherit">
-          <p style="font-weight:600;margin:0 0 2px">${city}</p>
+          <p style="font-weight:600;margin:0 0 2px">${esc(city)}</p>
           ${links || '<p style="font-size:12px;color:#6b7280;margin:0">Drop-off point</p>'}
         </div>`;
 

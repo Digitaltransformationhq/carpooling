@@ -15,7 +15,8 @@ export function Footer() {
               <span className="font-semibold text-xl">RideShare</span>
             </div>
             <p className="text-muted-foreground text-sm">
-              Connecting travelers, reducing costs, and making journeys more sustainable.
+              Connecting travelers, rewarding every shared seat, and making journeys more
+              sustainable.
             </p>
           </div>
 
@@ -80,8 +81,12 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-border mt-8 pt-8 text-center text-sm text-muted-foreground">
+        <div className="border-t border-border mt-8 pt-8 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-sm text-muted-foreground">
           <p>&copy; 2026 RideShare. All rights reserved.</p>
+          <span className="hidden sm:inline">·</span>
+          <Link to="/admin/login" className="hover:text-foreground transition-colors">
+            Admin Login
+          </Link>
         </div>
       </div>
     </footer>

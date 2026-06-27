@@ -12,6 +12,8 @@ import { supabase, isSupabaseConfigured } from "../lib/supabase";
 export interface ProfileLite {
   full_name: string | null;
   avatar_url: string | null;
+  points: number;
+  is_admin: boolean;
 }
 
 interface AuthContextValue {
@@ -29,7 +31,7 @@ interface AuthContextValue {
     phone: string
   ) => Promise<{ needsConfirmation: boolean }>;
   resendConfirmation: (email: string) => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
+  signInWithGoogle: (redirectPath?: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -64,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     const { data } = await supabase
       .from("profiles")
-      .select("full_name, avatar_url")
+      .select("full_name, avatar_url, points, is_admin")
       .eq("id", userId)
       .maybeSingle();
     setProfile((data as ProfileLite) ?? null);
@@ -99,12 +101,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
   };
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (redirectPath = "/profile") => {
     if (!supabase) throw new Error("Supabase isn't connected.");
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      // Return to the profile page after Google sends the user back.
-      options: { redirectTo: `${window.location.origin}/profile` },
+      // come back to the app after Google auth; the complete-profile form
+      // (for first-time members) appears over whatever page they land on.
+      options: { redirectTo: `${window.location.origin}${redirectPath}` },
     });
     if (error) throw error;
   };
