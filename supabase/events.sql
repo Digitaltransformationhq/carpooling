@@ -1,5 +1,5 @@
 -- ============================================================
--- RideShare — forthcoming CA events (shown on the calendar).
+-- CACommute — forthcoming CA events (shown on the calendar).
 -- Members can carpool to an event from its calendar entry.
 -- Run ONCE in Supabase → SQL Editor. Idempotent.
 -- ============================================================

@@ -1,5 +1,5 @@
 -- ============================================================
--- RideShare — security hardening.
+-- CACommute — security hardening.
 -- Closes real, exploitable holes WITHOUT changing app behaviour:
 --   1. Privilege escalation: any logged-in user could set is_admin=true
 --      on their own profile (RLS "update own" allowed it). FIXED.

@@ -1,5 +1,5 @@
 -- ============================================================
--- RideShare — integrity & abuse hardening (run LAST, after all other
+-- CACommute — integrity & abuse hardening (run LAST, after all other
 -- migrations incl. security.sql). Idempotent. Fixes:
 --   #1 Reward farming  — points are now symmetric (granted AND revoked),
 --      and you can't book/accept your own ride.

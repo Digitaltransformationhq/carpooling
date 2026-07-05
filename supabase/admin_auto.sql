@@ -1,5 +1,5 @@
 -- ============================================================
--- RideShare — secure, zero-touch admin setup.
+-- CACommute — secure, zero-touch admin setup.
 -- Admin rights are granted ONLY by this database allowlist — the app
 -- (client code) can never make anyone an admin. Only the email(s) listed
 -- in is_admin_email() can ever be admin; everyone else is a normal user.

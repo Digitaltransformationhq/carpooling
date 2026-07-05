@@ -1,5 +1,5 @@
 -- ============================================================
--- RideShare — reward points (replaces the old money/price idea).
+-- CACommute — reward points (replaces the old money/price idea).
 --   * Publish a ride           -> +2 points to the driver.
 --   * Get a seat confirmed     -> +1 point  to the rider.
 -- Points live on public.profiles.points.

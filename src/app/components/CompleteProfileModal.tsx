@@ -57,11 +57,16 @@ export function CompleteProfileModal() {
       setNeeded(false);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Could not save your details";
-      setError(
-        /duplicate|unique/i.test(msg)
-          ? "That Membership ID is already registered. Please check and try again."
-          : msg
-      );
+      if (/duplicate|unique/i.test(msg)) {
+        setError("That Membership ID is already registered. Please check and try again.");
+      } else if (/permission denied|column .*membership_id/i.test(msg)) {
+        // The DB column allow-list doesn't grant membership_id yet.
+        setError(
+          "Saving is blocked by the database. An admin needs to run supabase/membership.sql in Supabase to enable Membership ID."
+        );
+      } else {
+        setError(msg);
+      }
     } finally {
       setSaving(false);
     }
