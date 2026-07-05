@@ -1,5 +1,5 @@
 -- ============================================================
--- RideShare — public.profiles table synced from Supabase Auth
+-- CACommute — public.profiles table synced from Supabase Auth
 -- Run this ONCE in Supabase: SQL Editor → paste → Run.
 -- (Safe/idempotent — re-running won't duplicate data and will
 --  add any new columns/policies.)

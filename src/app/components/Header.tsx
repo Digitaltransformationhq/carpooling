@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router";
-import { Car, User, Menu, X, LogOut, Award } from "lucide-react";
+import { User, Menu, X, LogOut, Award } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
@@ -33,10 +33,8 @@ export function Header() {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2.5 shrink-0">
-              <div className="bg-primary text-primary-foreground p-2 rounded-xl shadow-sm shadow-primary/30">
-                <Car className="w-5 h-5" />
-              </div>
-              <span className="font-bold text-lg tracking-tight hidden sm:block">RideShare</span>
+              <img src="/logo.png" alt="CACommute" className="w-9 h-9 rounded-xl object-cover" />
+              <span className="font-bold text-lg tracking-tight hidden sm:block">CACommute</span>
             </Link>
 
             {/* Desktop Navigation */}

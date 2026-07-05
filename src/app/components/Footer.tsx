@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { Car, Facebook, Twitter, Instagram } from "lucide-react";
+import { Facebook, Twitter, Instagram } from "lucide-react";
 
 export function Footer() {
   return (
@@ -9,10 +9,8 @@ export function Footer() {
           {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <div className="bg-primary text-primary-foreground p-2 rounded-lg">
-                <Car className="w-6 h-6" />
-              </div>
-              <span className="font-semibold text-xl">RideShare</span>
+              <img src="/logo.png" alt="CACommute" className="w-10 h-10 rounded-lg object-cover" />
+              <span className="font-semibold text-xl">CACommute</span>
             </div>
             <p className="text-muted-foreground text-sm">
               Connecting travelers, rewarding every shared seat, and making journeys more
@@ -82,7 +80,7 @@ export function Footer() {
         </div>
 
         <div className="border-t border-border mt-8 pt-8 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-sm text-muted-foreground">
-          <p>&copy; 2026 RideShare. All rights reserved.</p>
+          <p>&copy; 2026 CACommute. All rights reserved.</p>
           <span className="hidden sm:inline">·</span>
           <Link to="/admin/login" className="hover:text-foreground transition-colors">
             Admin Login

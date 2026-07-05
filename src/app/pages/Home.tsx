@@ -102,7 +102,7 @@ export function Home() {
       {/* Features Section */}
       <section className="py-16 bg-muted/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center mb-3">Why CAs Choose RideShare</h2>
+          <h2 className="text-3xl font-bold text-center mb-3">Why CAs Choose CACommute</h2>
           <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
             A carpooling community built exclusively for Chartered Accountants — share rides, earn
             rewards, and connect with your peers.

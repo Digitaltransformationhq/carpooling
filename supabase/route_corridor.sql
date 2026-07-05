@@ -1,5 +1,5 @@
 -- ============================================================
--- RideShare — store each ride's driving route for corridor matching.
+-- CACommute — store each ride's driving route for corridor matching.
 -- When a ride is published, the app computes the shortest driving
 -- route (OSRM) and stores it here as a GeoJSON [lng,lat] polyline.
 -- Riders are then matched if their pickup + drop fall within 500m

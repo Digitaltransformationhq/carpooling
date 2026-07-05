@@ -1,5 +1,5 @@
 -- ============================================================
--- RideShare — request-to-join flow.
+-- CACommute — request-to-join flow.
 -- A rider REQUESTS a seat (status 'pending'); the driver ACCEPTS
 -- it (status 'accepted') or declines (the row is deleted).
 -- Only ACCEPTED seats count toward rides.booked_seats / availability.

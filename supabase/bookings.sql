@@ -1,5 +1,5 @@
 -- ============================================================
--- RideShare — seat availability + driver rider management.
+-- CACommute — seat availability + driver rider management.
 -- Run ONCE in Supabase → SQL Editor. Idempotent.
 -- ============================================================
 

@@ -1,4 +1,4 @@
-# RideShare — Carpooling Web App
+# CACommute — Carpooling Web App
 
 A responsive, installable carpooling website (BlaBlaCar-style) rebuilt from the
 [Figma Make design](https://www.figma.com/make/3UCoUoHj5eE65Gz5n7D00x/Responsive-Car-Pooling-Website)

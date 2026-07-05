@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { Car, Mail, Lock, User as UserIcon, Phone, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, User as UserIcon, Phone, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 export function Login() {
@@ -97,14 +97,13 @@ export function Login() {
         <div className="bg-card border border-primary rounded-2xl shadow-xl shadow-primary/5 p-8">
           {/* Logo */}
           <div className="flex flex-col items-center mb-6">
-            <div className="bg-primary text-primary-foreground p-3 rounded-xl mb-3">
-              <Car className="w-7 h-7" />
-            </div>
+            <img src="/logo.png" alt="CACommute" className="w-16 h-16 rounded-xl object-cover mb-3" />
+
             <h1 className="text-2xl font-bold">
               {isSignup ? "Create your account" : "Welcome back"}
             </h1>
             <p className="text-muted-foreground text-sm mt-1">
-              {isSignup ? "Join RideShare to book and publish rides" : "Sign in to continue"}
+              {isSignup ? "Join CACommute to book and publish rides" : "Sign in to continue"}
             </p>
           </div>
 

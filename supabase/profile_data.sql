@@ -1,5 +1,5 @@
 -- ============================================================
--- RideShare — link rides & bookings to the user who created them
+-- CACommute — link rides & bookings to the user who created them
 -- (powers "My Rides" and the profile stats). Run ONCE in Supabase
 -- SQL Editor. Idempotent.
 -- ============================================================

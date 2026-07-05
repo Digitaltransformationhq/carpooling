@@ -1,5 +1,5 @@
 -- ============================================================
--- RideShare — Supabase schema + seed
+-- CACommute — Supabase schema + seed
 -- Run this in your Supabase project: SQL Editor → paste → Run
 -- ============================================================
 

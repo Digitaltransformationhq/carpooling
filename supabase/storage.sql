@@ -1,5 +1,5 @@
 -- ============================================================
--- RideShare — Storage bucket for profile photos.
+-- CACommute — Storage bucket for profile photos.
 -- Run ONCE in Supabase SQL Editor. Idempotent.
 -- ============================================================
 

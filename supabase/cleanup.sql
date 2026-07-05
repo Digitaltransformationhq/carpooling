@@ -1,5 +1,5 @@
 -- ============================================================
--- RideShare — remove all dummy/seed/test data.
+-- CACommute — remove all dummy/seed/test data.
 -- Run ONCE in Supabase → SQL Editor.
 -- Deletes every ride that has NO owner (the seeded demo rides and
 -- any anonymous test rides). Rides you published while logged in

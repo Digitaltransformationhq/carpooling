@@ -1,5 +1,5 @@
 -- ============================================================
--- RideShare — vehicle type (2-wheeler / 4-wheeler).
+-- CACommute — vehicle type (2-wheeler / 4-wheeler).
 -- Replaces the free-text car model. The money/price concept was
 -- removed from the app, so `price` stays at 0 for new rides.
 -- Run ONCE in Supabase → SQL Editor. Idempotent.

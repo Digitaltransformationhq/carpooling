@@ -10,14 +10,14 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.svg", "apple-touch-icon.png"],
+      includeAssets: ["favicon-32x32.png", "favicon-16x16.png", "apple-touch-icon.png"],
       workbox: {
         // SPA fallback so deep links work offline
         navigateFallback: "/index.html",
       },
       manifest: {
-        name: "RideShare — Carpooling",
-        short_name: "RideShare",
+        name: "CACommute — Carpooling",
+        short_name: "CACommute",
         description:
           "Your pick of rides at low prices. Search, book and publish carpool rides.",
         theme_color: "#030213",

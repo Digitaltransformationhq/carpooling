@@ -1,5 +1,5 @@
 -- ============================================================
--- RideShare — enable live updates (Supabase Realtime).
+-- CACommute — enable live updates (Supabase Realtime).
 -- Lets the ride details page update itself when a ride or its
 -- bookings change (driver accepts a request, a seat is cancelled,
 -- ride started/completed) without anyone refreshing the page.
