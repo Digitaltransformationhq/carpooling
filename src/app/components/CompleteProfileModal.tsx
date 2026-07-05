@@ -56,13 +56,25 @@ export function CompleteProfileModal() {
       await refreshProfile();
       setNeeded(false);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Could not save your details";
+      // Supabase returns a PostgrestError object (not an Error instance), so
+      // pull the message off whatever shape we got — otherwise the real DB
+      // reason is lost behind a generic "could not save".
+      console.error("Profile save failed:", err);
+      const msg =
+        err instanceof Error
+          ? err.message
+          : err && typeof err === "object" && typeof (err as { message?: unknown }).message === "string"
+            ? (err as { message: string }).message
+            : "Could not save your details";
       if (/duplicate|unique/i.test(msg)) {
         setError("That Membership ID is already registered. Please check and try again.");
-      } else if (/permission denied|column .*membership_id/i.test(msg)) {
-        // The DB column allow-list doesn't grant membership_id yet.
+      } else if (
+        /permission denied|column .*membership_id|membership_id.* does not exist|schema cache/i.test(msg)
+      ) {
+        // The DB is missing the column, its write grant, or PostgREST's schema
+        // cache is stale right after adding it.
         setError(
-          "Saving is blocked by the database. An admin needs to run supabase/membership.sql in Supabase to enable Membership ID."
+          "Saving is blocked by the database — the Membership ID column isn't set up yet. Run supabase/membership.sql in your Supabase SQL Editor (then wait ~30s for the schema to refresh), and try again."
         );
       } else {
         setError(msg);
