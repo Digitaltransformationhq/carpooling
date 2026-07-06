@@ -277,6 +277,13 @@ export async function markRideStarted(rideId: string): Promise<void> {
   if (error) throw error;
 }
 
+/** Undo "start" — puts the ride back to Upcoming so it's discoverable again. */
+export async function markRideNotStarted(rideId: string): Promise<void> {
+  if (!supabase) throw new Error("Supabase isn't connected.");
+  const { error } = await supabase.from("rides").update({ started: false }).eq("id", rideId);
+  if (error) throw error;
+}
+
 export type BookingStatus = "pending" | "accepted";
 
 export interface RideBooking {

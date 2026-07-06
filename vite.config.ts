@@ -5,6 +5,11 @@ import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
+  // Google OAuth returns to the Supabase "Site URL" (http://localhost:3000),
+  // so the dev server must listen on 3000 for the callback to land on a
+  // running app. strictPort fails loudly instead of silently moving to another
+  // port (which would break the OAuth redirect again).
+  server: { port: 3000, strictPort: true },
   plugins: [
     react(),
     tailwindcss(),

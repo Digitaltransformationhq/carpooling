@@ -8,6 +8,7 @@ import {
   deleteRide,
   markRideComplete,
   markRideStarted,
+  markRideNotStarted,
   fetchRideBookings,
   removeBooking,
   fetchMyBookings,
@@ -209,6 +210,16 @@ export function RideDetails() {
     }
   };
 
+  const handleUnstart = async () => {
+    if (!ride) return;
+    try {
+      await markRideNotStarted(ride.id);
+      setRide({ ...ride, started: false });
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Could not update ride");
+    }
+  };
+
   const handleRemove = async () => {
     if (!ride) return;
     if (!window.confirm("Remove this published ride?")) return;
@@ -366,12 +377,20 @@ export function RideDetails() {
                     </button>
                   )}
                   {isStarted && (
-                    <button
-                      onClick={handleComplete}
-                      className="w-full border border-primary py-3 rounded-lg font-medium hover:bg-primary/10 transition-colors mb-3"
-                    >
-                      Mark as complete
-                    </button>
+                    <>
+                      <button
+                        onClick={handleComplete}
+                        className="w-full border border-primary py-3 rounded-lg font-medium hover:bg-primary/10 transition-colors mb-3"
+                      >
+                        Mark as complete
+                      </button>
+                      <button
+                        onClick={handleUnstart}
+                        className="w-full text-sm text-muted-foreground hover:text-foreground underline mb-3"
+                      >
+                        Undo start — make this ride visible again
+                      </button>
+                    </>
                   )}
                   <button
                     onClick={handleRemove}
