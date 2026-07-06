@@ -155,8 +155,8 @@ export function Profile() {
             ? (err as { message: string }).message
             : "Could not save profile";
       setSavedMsg(
-        /permission denied|membership_id|schema cache/i.test(msg)
-          ? "Saving is blocked by the database. Run supabase/membership.sql in your Supabase SQL Editor, then try again."
+        /duplicate|unique/i.test(msg)
+          ? "That Membership ID is already registered. Please check and try again."
           : msg
       );
     } finally {

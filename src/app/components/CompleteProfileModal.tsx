@@ -66,19 +66,11 @@ export function CompleteProfileModal() {
           : err && typeof err === "object" && typeof (err as { message?: unknown }).message === "string"
             ? (err as { message: string }).message
             : "Could not save your details";
-      if (/duplicate|unique/i.test(msg)) {
-        setError("That Membership ID is already registered. Please check and try again.");
-      } else if (
-        /permission denied|column .*membership_id|membership_id.* does not exist|schema cache/i.test(msg)
-      ) {
-        // The DB is missing the column, its write grant, or PostgREST's schema
-        // cache is stale right after adding it.
-        setError(
-          "Saving is blocked by the database — the Membership ID column isn't set up yet. Run supabase/membership.sql in your Supabase SQL Editor (then wait ~30s for the schema to refresh), and try again."
-        );
-      } else {
-        setError(msg);
-      }
+      setError(
+        /duplicate|unique/i.test(msg)
+          ? "That Membership ID is already registered. Please check and try again."
+          : msg
+      );
     } finally {
       setSaving(false);
     }

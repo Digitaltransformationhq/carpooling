@@ -59,15 +59,36 @@ export async function fetchProfile(userId: string): Promise<Profile | null> {
   return (data as Profile) ?? null;
 }
 
-/** Upsert so it works whether or not a profile row already exists. */
+/**
+ * Save profile fields. Every user already has a profiles row (created by the
+ * `on_auth_user_created` trigger + backfill), so a plain UPDATE is correct —
+ * and, unlike upsert, it needs only UPDATE privilege. The security hardening
+ * deliberately withholds INSERT from the browser role (profiles are created
+ * server-side), so an upsert here fails with "permission denied for table
+ * profiles". Update works with the exact same grants; we only fall back to an
+ * insert for the rare case where the row is genuinely missing.
+ */
 export async function updateProfile(userId: string, fields: ProfileUpdate): Promise<Profile> {
   if (!supabase) throw new Error("Supabase isn't connected.");
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("profiles")
-    .upsert({ id: userId, ...fields })
+    .update(fields)
+    .eq("id", userId)
     .select()
-    .single();
+    .maybeSingle();
   if (error) throw error;
+
+  // Row missing (e.g. a pre-trigger account) — create it. Needs INSERT
+  // privilege; if the hardening blocks that, surface a clear message.
+  if (!data) {
+    const created = await supabase
+      .from("profiles")
+      .insert({ id: userId, ...fields })
+      .select()
+      .single();
+    if (created.error) throw created.error;
+    data = created.data;
+  }
 
   // Keep the denormalized driver info on this user's rides in sync,
   // so name/photo changes show everywhere they appear as the driver.
