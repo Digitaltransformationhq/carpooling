@@ -5,6 +5,13 @@
 -- Run ONCE in Supabase → SQL Editor. Idempotent.
 -- ============================================================
 
+-- Ensure every client-writable column exists BEFORE granting on it —
+-- a GRANT that names a missing column errors and aborts the script,
+-- which is how writes ended up fully revoked in the first place.
+alter table public.profiles add column if not exists full_name     text;
+alter table public.profiles add column if not exists phone         text;
+alter table public.profiles add column if not exists bio           text;
+alter table public.profiles add column if not exists avatar_url    text;
 alter table public.profiles add column if not exists membership_id text;
 
 -- A membership ID identifies one CA — keep it unique (nulls allowed).
