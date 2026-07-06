@@ -23,19 +23,16 @@ export function Home() {
     <div className="min-h-screen">
       {/* Hero Section */}
       <section
-        className="relative bg-cover bg-center py-20 md:py-32"
-        style={{
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1542242476-5a3565835a38?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoaWdod2F5JTIwcm9hZCUyMHRyaXB8ZW58MXx8fHwxNzgwMzc4ODE5fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral')`,
-        }}
+        className="relative bg-cover bg-bottom bg-no-repeat py-20 md:py-32"
+        style={{ backgroundImage: `url('/hero-bg.png')`, backgroundColor: "#f9f3ee" }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
+            <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-4">
               Share Rides, Earn Rewards
             </h1>
-            <p className="text-xl text-white/90 max-w-2xl mx-auto mb-8">
-              Collect points every time you publish or join a ride — make friends and travel
-              sustainably
+            <p className="text-xl text-foreground/70 max-w-2xl mx-auto mb-8">
+              Earn points every time you share or join a ride.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
@@ -47,7 +44,7 @@ export function Home() {
               </Link>
               <Link
                 to="/publish"
-                className="inline-flex items-center justify-center gap-2 bg-white/10 text-white border border-white/40 backdrop-blur px-8 py-3 rounded-lg font-medium hover:bg-white/20 transition-colors"
+                className="inline-flex items-center justify-center gap-2 bg-card text-foreground border border-border px-8 py-3 rounded-lg font-medium hover:bg-accent transition-colors shadow-sm"
               >
                 <Car className="w-5 h-5" />
                 Publish a Ride

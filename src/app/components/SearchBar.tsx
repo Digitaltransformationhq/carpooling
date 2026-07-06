@@ -101,22 +101,32 @@ export function SearchBar({ variant = "hero" }: SearchBarProps) {
     );
   }
 
+  // slick filled-field style shared across every input in the hero search card
+  const field =
+    "w-full py-3 px-4 text-sm bg-muted/40 border border-transparent rounded-xl " +
+    "placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 " +
+    "focus:ring-primary/60 focus:bg-card focus:border-transparent transition-colors";
+  const labelClass =
+    "text-xs font-medium text-muted-foreground flex items-center gap-1.5 px-0.5";
+
   return (
-    <form onSubmit={handleSearch} className="bg-card border border-primary rounded-2xl shadow-2xl p-6 md:p-8 max-w-4xl mx-auto">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="space-y-2">
-          <label className="text-sm text-muted-foreground flex items-center gap-2">
-            <MapPin className="w-4 h-4" />
+    <form
+      onSubmit={handleSearch}
+      className="bg-card/95 backdrop-blur-xl border border-border/60 ring-1 ring-black/5 rounded-3xl shadow-2xl shadow-black/10 p-5 md:p-7 max-w-4xl mx-auto"
+    >
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-5">
+        <div className="space-y-1.5">
+          <label className={labelClass}>
+            <MapPin className="w-3.5 h-3.5" />
             Leaving from
           </label>
           <div className="relative">
-            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
             <PlaceAutocomplete
-              placeholder="City, address, station..."
+              placeholder="City or address"
               value={from}
               onChange={setFrom}
               onSelect={({ label }) => setFrom(label)}
-              className="w-full pl-10 pr-10 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              className={`${field} pr-10`}
               required
             />
             <button
@@ -124,55 +134,50 @@ export function SearchBar({ variant = "hero" }: SearchBarProps) {
               onClick={handleDetectLocation}
               disabled={locating}
               title="Use my current location"
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-primary hover:bg-primary/10 rounded disabled:opacity-60 z-10"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-primary hover:bg-primary/10 rounded-lg disabled:opacity-60 z-10"
             >
               {locating ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <LocateFixed className="w-5 h-5" />
+                <LocateFixed className="w-4 h-4" />
               )}
             </button>
           </div>
         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm text-muted-foreground flex items-center gap-2">
-            <MapPin className="w-4 h-4" />
+        <div className="space-y-1.5">
+          <label className={labelClass}>
+            <MapPin className="w-3.5 h-3.5" />
             Going to
           </label>
           <PlaceAutocomplete
-            placeholder="City, address, station..."
+            placeholder="City or address"
             value={to}
             onChange={setTo}
             onSelect={({ label }) => setTo(label)}
-            className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            className={field}
             required
           />
         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm text-muted-foreground flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
+        <div className="space-y-1.5">
+          <label className={labelClass}>
+            <Calendar className="w-3.5 h-3.5" />
             Date
           </label>
-          <EventDatePicker
-            value={date}
-            onChange={setDate}
-            min={minDate}
-            className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-          />
+          <EventDatePicker value={date} onChange={setDate} min={minDate} className={field} />
         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm text-muted-foreground flex items-center gap-2">
-            <Users className="w-4 h-4" />
+        <div className="space-y-1.5">
+          <label className={labelClass}>
+            <Users className="w-3.5 h-3.5" />
             Passengers
           </label>
           <div className="relative">
             <select
               value={passengers}
               onChange={(e) => setPassengers(e.target.value)}
-              className="w-full appearance-none pl-4 pr-10 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              className={`${field} appearance-none pr-10 cursor-pointer`}
             >
               <option value="1">1 passenger</option>
               <option value="2">2 passengers</option>
@@ -186,7 +191,7 @@ export function SearchBar({ variant = "hero" }: SearchBarProps) {
 
       <button
         type="submit"
-        className="w-full bg-primary text-primary-foreground py-4 rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+        className="w-full bg-primary text-primary-foreground py-3.5 rounded-xl font-semibold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-primary/25"
       >
         <Search className="w-5 h-5" />
         <span>Search for rides</span>
