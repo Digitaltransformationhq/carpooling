@@ -294,36 +294,31 @@ export function RideDetails() {
           <div className="bg-card border border-primary rounded-xl">
             {/* Trip section */}
             <div className="p-6">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-                {/* Names: own row on mobile; on desktop they join the parent flex
-                    via `contents` so markers + connector sit between them */}
-                <div className="flex items-center justify-between gap-3 sm:contents">
-                  <p className="font-semibold text-lg truncate min-w-0 flex-1 sm:flex-none sm:order-1">
-                    {ride.from}
-                  </p>
-                  <p className="font-semibold text-lg truncate min-w-0 flex-1 text-right sm:text-left sm:flex-none sm:order-5">
-                    {ride.to}
-                  </p>
+              {/* Names on top, animated connector full-width below — gives the
+                  route-flow animation room at every screen size (same on the
+                  driver + rider views, which share this header). */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-semibold text-lg truncate min-w-0">{ride.from}</p>
+                  <p className="font-semibold text-lg truncate min-w-0 text-right">{ride.to}</p>
                 </div>
 
-                {/* Markers + connector: drop below the names on mobile (so the
-                    animation has full width), inline between them on desktop */}
-                <div className="flex items-center gap-2 sm:contents">
+                <div className="flex items-center gap-2">
                   {/* Origin square marker */}
-                  <span className="w-5 h-5 rounded-[4px] bg-primary flex items-center justify-center shrink-0 sm:order-2">
+                  <span className="w-5 h-5 rounded-[4px] bg-primary flex items-center justify-center shrink-0">
                     <span className="w-2 h-2 rounded-[1px] bg-white"></span>
                   </span>
 
                   {/* Connector — animated when live, static when completed */}
                   <div
-                    className={`h-[3px] flex-1 sm:order-3 ${isCompleted ? "route-still" : "route-flow"}`}
+                    className={`h-[3px] flex-1 ${isCompleted ? "route-still" : "route-flow"}`}
                     aria-hidden="true"
                   ></div>
 
                   {/* Destination triangle marker */}
                   <svg
                     viewBox="-2 -2 18 20"
-                    className="w-4 h-4 text-primary shrink-0 sm:order-4"
+                    className="w-4 h-4 text-primary shrink-0"
                     fill="currentColor"
                     stroke="currentColor"
                     strokeWidth="3"
