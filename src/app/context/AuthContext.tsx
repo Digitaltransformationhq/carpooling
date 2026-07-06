@@ -77,6 +77,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshProfile();
   }, [refreshProfile]);
 
+  // Points can change from actions elsewhere (publishing a ride, a driver
+  // accepting your request). Profiles aren't in the realtime publication, so
+  // refetch when the tab regains focus/visibility to keep the points badge
+  // current without a manual reload.
+  useEffect(() => {
+    if (!supabase) return;
+    const refresh = () => {
+      if (document.visibilityState === "visible") refreshProfile();
+    };
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [refreshProfile]);
+
   const signIn = async (email: string, password: string) => {
     if (!supabase) throw new Error("Supabase isn't connected.");
     const { error } = await supabase.auth.signInWithPassword({ email, password });

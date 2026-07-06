@@ -26,7 +26,7 @@ const FALLBACK_PHONE = "+91 98765 43210";
 export function RideDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user: authUser } = useAuth();
+  const { user: authUser, refreshProfile } = useAuth();
   const [ride, setRide] = useState<Ride | null>(null);
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState(false);
@@ -89,6 +89,9 @@ export function RideDetails() {
       } else if (authUser) {
         fetchMyBookings(id).then(setMyBookings).catch(() => {});
       }
+      // A booking change here may have awarded/removed a point (e.g. the driver
+      // just accepted this rider) — refresh the points badge live.
+      refreshProfile();
     };
 
     const channel = client
@@ -108,7 +111,7 @@ export function RideDetails() {
     return () => {
       client.removeChannel(channel);
     };
-  }, [id, authUser]);
+  }, [id, authUser, refreshProfile]);
 
   const refreshRide = async (rideId: string) => {
     const updated = await fetchRideById(rideId);
