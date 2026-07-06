@@ -294,26 +294,36 @@ export function RideDetails() {
           <div className="bg-card border border-primary rounded-xl">
             {/* Trip section */}
             <div className="p-6">
-              <div className="flex items-center gap-3 sm:gap-4">
-                {/* Origin: name then square marker */}
-                <div className="flex items-center gap-2 min-w-0">
-                  <p className="font-semibold text-lg truncate">{ride.from}</p>
-                  <span className="w-5 h-5 rounded-[4px] bg-primary flex items-center justify-center shrink-0">
-                    <span className="w-2 h-2 rounded-[1px] bg-white"></span>
-                  </span>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+                {/* Names: own row on mobile; on desktop they join the parent flex
+                    via `contents` so markers + connector sit between them */}
+                <div className="flex items-center justify-between gap-3 sm:contents">
+                  <p className="font-semibold text-lg truncate min-w-0 flex-1 sm:flex-none sm:order-1">
+                    {ride.from}
+                  </p>
+                  <p className="font-semibold text-lg truncate min-w-0 flex-1 text-right sm:text-left sm:flex-none sm:order-5">
+                    {ride.to}
+                  </p>
                 </div>
 
-                {/* Connector — animated when live, static when completed */}
-                <div
-                  className={`flex-1 h-[3px] ${isCompleted ? "route-still" : "route-flow"}`}
-                  aria-hidden="true"
-                ></div>
+                {/* Markers + connector: drop below the names on mobile (so the
+                    animation has full width), inline between them on desktop */}
+                <div className="flex items-center gap-2 sm:contents">
+                  {/* Origin square marker */}
+                  <span className="w-5 h-5 rounded-[4px] bg-primary flex items-center justify-center shrink-0 sm:order-2">
+                    <span className="w-2 h-2 rounded-[1px] bg-white"></span>
+                  </span>
 
-                {/* Destination: triangle (pointing toward) then name */}
-                <div className="flex items-center gap-2 min-w-0">
+                  {/* Connector — animated when live, static when completed */}
+                  <div
+                    className={`h-[3px] flex-1 sm:order-3 ${isCompleted ? "route-still" : "route-flow"}`}
+                    aria-hidden="true"
+                  ></div>
+
+                  {/* Destination triangle marker */}
                   <svg
                     viewBox="-2 -2 18 20"
-                    className="w-4 h-4 text-primary shrink-0"
+                    className="w-4 h-4 text-primary shrink-0 sm:order-4"
                     fill="currentColor"
                     stroke="currentColor"
                     strokeWidth="3"
@@ -322,7 +332,6 @@ export function RideDetails() {
                   >
                     <path d="M0 0L14 8L0 16Z" />
                   </svg>
-                  <p className="font-semibold text-lg truncate">{ride.to}</p>
                 </div>
               </div>
 
