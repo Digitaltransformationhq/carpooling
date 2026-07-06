@@ -79,8 +79,8 @@ export function Home() {
               </div>
               <p className="font-semibold text-lg mb-1">No rides leaving soon yet</p>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                Be the first to share a ride — publish your trip, help others travel, and earn 2
-                reward points.
+                Be the first to share a ride — publish your trip, help others travel, and earn
+                reward points when the trip is completed.
               </p>
               <Link
                 to="/publish"
@@ -114,7 +114,7 @@ export function Home() {
               </div>
               <h3 className="font-semibold mb-2">Earn Reward Points</h3>
               <p className="text-sm text-muted-foreground">
-                Get 2 points for every ride you publish and 1 for each ride you join
+                Get 2 points for every ride you complete as a driver and 1 for each ride you complete as a rider
               </p>
             </div>
 
@@ -168,9 +168,9 @@ export function Home() {
                 <Car className="w-7 h-7 text-primary" />
               </div>
               <div className="text-4xl font-bold text-primary mb-1">+2</div>
-              <h3 className="font-semibold mb-2">Publish a ride</h3>
+              <h3 className="font-semibold mb-2">Drive a ride</h3>
               <p className="text-sm text-muted-foreground">
-                Offer your empty seats and earn 2 points for every trip you share.
+                Share your empty seats and earn 2 points once the trip is completed with riders.
               </p>
             </div>
             <div className="bg-card border border-primary rounded-xl p-8 text-center">
@@ -180,7 +180,7 @@ export function Home() {
               <div className="text-4xl font-bold text-primary mb-1">+1</div>
               <h3 className="font-semibold mb-2">Join a ride</h3>
               <p className="text-sm text-muted-foreground">
-                Hop in as a passenger and earn 1 point each time your seat is confirmed.
+                Hop in as a passenger and earn 1 point for each completed trip you ride.
               </p>
             </div>
           </div>

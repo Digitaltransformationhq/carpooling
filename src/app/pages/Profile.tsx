@@ -237,8 +237,9 @@ export function Profile() {
             </div>
           </div>
           <p className="text-xs text-muted-foreground text-center mt-3">
-            Earn <span className="font-medium text-foreground">2 points</span> for publishing a ride
-            and <span className="font-medium text-foreground">1 point</span> for joining one.
+            Earn <span className="font-medium text-foreground">2 points</span> when a ride you drove
+            is completed and <span className="font-medium text-foreground">1 point</span> for each
+            completed ride you join.
           </p>
         </div>
 

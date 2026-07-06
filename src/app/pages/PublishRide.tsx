@@ -55,7 +55,7 @@ export function PublishRide() {
         fromCoords,
         toCoords,
       });
-      refreshProfile(); // reflect the +2 reward points in the navbar
+      refreshProfile(); // keep the navbar profile fresh (points are earned on completion)
       alert("Ride published successfully!");
       navigate(`/ride/${ride.id}`);
     } catch (err) {

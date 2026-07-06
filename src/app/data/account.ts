@@ -3,7 +3,7 @@ import { supabase } from "../lib/supabase";
 export interface UserStats {
   ridesAsDriver: number;
   ridesAsPassenger: number;
-  /** Reward points: +2 per published ride, +1 per confirmed seat. */
+  /** Reward points: +2 per completed ride you drove (with riders), +1 per completed ride you joined. */
   points: number;
 }
 

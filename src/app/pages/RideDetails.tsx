@@ -208,6 +208,7 @@ export function RideDetails() {
     try {
       await markRideComplete(ride.id);
       setRide({ ...ride, completed: true });
+      refreshProfile(); // completing a ride (with riders) awards points
     } catch (err) {
       alert(err instanceof Error ? err.message : "Could not update ride");
     }
