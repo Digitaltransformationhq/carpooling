@@ -20,7 +20,7 @@ export default defineConfig({
         short_name: "CACommute",
         description:
           "Your pick of rides at low prices. Search, book and publish carpool rides.",
-        theme_color: "#030213",
+        theme_color: "#ffffff",
         background_color: "#ffffff",
         display: "standalone",
         orientation: "portrait",
