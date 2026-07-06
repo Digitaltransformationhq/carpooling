@@ -13,12 +13,25 @@ create unique index if not exists profiles_membership_id_key
   where membership_id is not null;
 
 -- ------------------------------------------------------------
--- IMPORTANT: security.sql locks profile writes down to a column
--- allow-list (revokes blanket insert/update, then grants only
--- specific columns). A column that isn't granted is DENIED — so if
--- security.sql ran before this column existed, saving a Membership
--- ID fails with "permission denied for column membership_id".
--- Granting it here makes this file a complete, standalone fix.
+-- IMPORTANT — this is the fix for "Could not save profile".
+--
+-- security.sql locks profile writes to a column allow-list: it
+-- REVOKES blanket insert/update, then GRANTs only specific columns.
+-- But granting a column that doesn't exist yet raises an error and
+-- aborts the rest of that script — so if security.sql ran BEFORE the
+-- membership_id column existed, the revoke landed but the grants did
+-- NOT, leaving the browser role unable to write ANY profile column.
+--
+-- Re-granting the full profile-write column set here (idempotent)
+-- makes this file a complete, standalone fix: run it once and profile
+-- saving works regardless of what state security.sql left behind.
+-- The reward/points columns stay ungranted on purpose (server-only).
 -- ------------------------------------------------------------
-grant insert (membership_id) on public.profiles to authenticated;
-grant update (membership_id) on public.profiles to authenticated;
+grant insert (id, full_name, phone, bio, avatar_url, membership_id)
+  on public.profiles to authenticated;
+grant update (full_name, phone, bio, avatar_url, membership_id)
+  on public.profiles to authenticated;
+
+-- Nudge PostgREST to refresh its schema cache immediately (otherwise a
+-- freshly added column can 404 for up to a minute).
+notify pgrst, 'reload schema';

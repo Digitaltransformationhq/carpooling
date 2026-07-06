@@ -145,7 +145,20 @@ export function Profile() {
       setSavedMsg("Profile saved!");
       refreshProfile();
     } catch (err) {
-      setSavedMsg(err instanceof Error ? err.message : "Could not save profile");
+      // Supabase throws a PostgrestError (plain object, not an Error), so read
+      // .message off whatever shape we got instead of masking it.
+      console.error("Profile save failed:", err);
+      const msg =
+        err instanceof Error
+          ? err.message
+          : err && typeof err === "object" && typeof (err as { message?: unknown }).message === "string"
+            ? (err as { message: string }).message
+            : "Could not save profile";
+      setSavedMsg(
+        /permission denied|membership_id|schema cache/i.test(msg)
+          ? "Saving is blocked by the database. Run supabase/membership.sql in your Supabase SQL Editor, then try again."
+          : msg
+      );
     } finally {
       setSaving(false);
     }
