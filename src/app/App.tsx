@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { RouterProvider } from "react-router";
 import { router } from "./routes";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { AuthModalProvider } from "./context/AuthModalContext";
 import { backfillMissingRoutes } from "./data/rides";
 import { InstallPrompt } from "./components/InstallPrompt";
 
@@ -22,9 +23,11 @@ function RouteBackfill() {
 export default function App() {
   return (
     <AuthProvider>
-      <RouteBackfill />
-      <RouterProvider router={router} />
-      <InstallPrompt />
+      <AuthModalProvider>
+        <RouteBackfill />
+        <RouterProvider router={router} />
+        <InstallPrompt />
+      </AuthModalProvider>
     </AuthProvider>
   );
 }

@@ -2,6 +2,7 @@ import { Link, NavLink, useNavigate } from "react-router";
 import { User, Menu, X, LogOut, Award } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useAuthModal } from "../context/AuthModalContext";
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `px-3.5 py-2 rounded-full text-sm font-medium transition-colors ${
@@ -14,6 +15,7 @@ export function Header() {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, profile, signOut } = useAuth();
+  const { openLogin } = useAuthModal();
   const displayName =
     profile?.full_name ||
     (user?.user_metadata?.full_name as string) ||
@@ -30,10 +32,10 @@ export function Header() {
     <header className="fixed top-0 inset-x-0 z-50 px-3 sm:px-5 pt-3 sm:pt-4">
       <div className="max-w-7xl mx-auto rounded-2xl border border-border/70 bg-card/75 backdrop-blur-xl shadow-lg shadow-black/5 ring-1 ring-black/5">
         <div className="px-4 sm:px-6">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-14">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2.5 shrink-0">
-              <img src="/logo.png" alt="CACommute" className="w-9 h-9 rounded-xl object-cover" />
+              <img src="/logo.png" alt="CACommute" className="w-8 h-8 rounded-lg object-cover" />
               <span className="font-bold text-lg tracking-tight hidden sm:block">CACommute</span>
             </Link>
 
@@ -89,13 +91,13 @@ export function Header() {
                   </button>
                 </>
               ) : (
-                <Link
-                  to="/login"
+                <button
+                  onClick={openLogin}
                   className="flex items-center gap-2 px-5 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm shadow-primary/30"
                 >
                   <User className="w-4 h-4" />
                   <span>Log in</span>
-                </Link>
+                </button>
               )}
             </div>
 
@@ -157,13 +159,15 @@ export function Header() {
                   </button>
                 </>
               ) : (
-                <Link
-                  to="/login"
-                  className="block px-4 py-2.5 text-foreground font-medium hover:bg-accent rounded-xl transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    openLogin();
+                  }}
+                  className="block w-full text-left px-4 py-2.5 text-foreground font-medium hover:bg-accent rounded-xl transition-colors"
                 >
                   Log in
-                </Link>
+                </button>
               )}
             </div>
           )}

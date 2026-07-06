@@ -2,6 +2,7 @@ import { Outlet, useLocation } from "react-router";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 import { CompleteProfileModal } from "../components/CompleteProfileModal";
+import { LoginModal } from "../components/LoginModal";
 
 export function Root() {
   // The home hero sits behind the floating navbar; other pages need top
@@ -12,11 +13,12 @@ export function Root() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className={`flex-1 ${isHome ? "" : "pt-24"}`}>
+      <main className={`flex-1 ${isHome ? "" : "pt-20"}`}>
         <Outlet />
       </main>
       <Footer />
       <CompleteProfileModal />
+      <LoginModal />
     </div>
   );
 }
