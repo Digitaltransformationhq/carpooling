@@ -10,7 +10,8 @@
 --   * a ride can only be completed on/after its travel date
 --   * bookings on a completed ride are frozen      (can't be added/removed
 --     to re-trigger awards)
---   * un-completing or deleting a completed ride revokes the points
+--   * un-completing a completed ride revokes the points; DELETING a completed
+--     ride keeps them (the trip happened — cleanup shouldn't strip the reward)
 --   * a rider earns once per ride, however many bookings they make
 --
 -- Run ONCE in Supabase -> SQL Editor, AFTER the other migrations
@@ -117,16 +118,15 @@ drop trigger if exists trg_rides_completion_points on public.rides;
 create trigger trg_rides_completion_points after update of completed on public.rides
   for each row execute function public.rides_completion_points();
 
--- Deleting a completed ride revokes its points (before delete: bookings still
--- exist). Also flag the deletion so this ride's booking rows may cascade past
--- the freeze below.
+-- Points for a COMPLETED ride are KEPT when the ride is later deleted — the
+-- trip really happened, so removing the record must not strip the earned
+-- reward. (Un-completing a ride still revokes, via the completion trigger.)
+-- This function only flags the deletion so the ride's booking rows may cascade
+-- past the freeze below.
 create or replace function public.rides_delete_points()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
   perform set_config('cacommute.deleting_ride', old.id::text, true); -- txn-local
-  if coalesce(old.completed, false) then
-    perform public.ride_settle_points(old.id, old.user_id, -1);
-  end if;
   return old;
 end; $$;
 drop trigger if exists trg_rides_delete_points on public.rides;

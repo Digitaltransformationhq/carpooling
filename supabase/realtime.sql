@@ -21,4 +21,13 @@ begin
   ) then
     alter publication supabase_realtime add table public.bookings;
   end if;
+
+  -- profiles: so the reward-points badge updates live everywhere the moment
+  -- points change (a ride completes, a request is accepted, etc.).
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'profiles'
+  ) then
+    alter publication supabase_realtime add table public.profiles;
+  end if;
 end $$;

@@ -10,6 +10,7 @@ import {
 } from "../data/profiles";
 import { fetchUserStats, fetchMyTrips, type UserStats, type Trip } from "../data/account";
 import { deleteRide, markRideComplete, markRideStarted } from "../data/rides";
+import { supabase } from "../lib/supabase";
 import { formatDate } from "../lib/format";
 
 const AVATAR = "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop";
@@ -17,7 +18,7 @@ const AVATAR = "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=2
 export function Profile() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"rides" | "settings">("rides");
-  const { user: authUser, loading, configured, refreshProfile } = useAuth();
+  const { user: authUser, loading, configured, refreshProfile, profile: authProfile } = useAuth();
 
   const [profile, setProfile] = useState<DBProfile | null>(null);
   const [form, setForm] = useState({ full_name: "", phone: "", membership_id: "" });
@@ -57,6 +58,25 @@ export function Profile() {
 
     fetchUserStats(authUser.id).then(setStats).catch(() => {});
     fetchMyTrips(authUser.id).then(setTrips).catch(() => {});
+  }, [authUser]);
+
+  // Live: keep "My Rides" and the stats current when rides or bookings change
+  // (you publish/complete/delete a ride, a request comes in, etc.).
+  useEffect(() => {
+    if (!supabase || !authUser) return;
+    const client = supabase;
+    const reload = () => {
+      fetchUserStats(authUser.id).then(setStats).catch(() => {});
+      fetchMyTrips(authUser.id).then(setTrips).catch(() => {});
+    };
+    const channel = client
+      .channel(`profile-activity-${authUser.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "rides" }, reload)
+      .on("postgres_changes", { event: "*", schema: "public", table: "bookings" }, reload)
+      .subscribe();
+    return () => {
+      client.removeChannel(channel);
+    };
   }, [authUser]);
 
   if (configured && loading) {
@@ -231,7 +251,7 @@ export function Profile() {
             <div className="text-center">
               <div className="text-2xl font-bold flex items-center justify-center gap-1.5 text-primary">
                 <Award className="w-6 h-6" />
-                {stats.points}
+                {authProfile?.points ?? stats.points}
               </div>
               <div className="text-sm text-muted-foreground">Reward Points</div>
             </div>

@@ -4,6 +4,7 @@ import { SearchBar } from "../components/SearchBar";
 import { RideCard } from "../components/RideCard";
 import { Ride } from "../data/mockData";
 import { fetchRecentRides } from "../data/rides";
+import { supabase } from "../lib/supabase";
 import { Leaf, Award, Users, BadgeCheck, MapPin, Car, Gift, Search } from "lucide-react";
 
 const RidesMap = lazy(() => import("../components/RidesMap"));
@@ -17,6 +18,22 @@ export function Home() {
       .then(setFeaturedRides)
       .catch(() => setFeaturedRides([]))
       .finally(() => setLoadingRides(false));
+  }, []);
+
+  // Live: refresh the list whenever any ride changes (published, completed,
+  // started, deleted) so it stays current without a manual refresh.
+  useEffect(() => {
+    if (!supabase) return;
+    const client = supabase;
+    const channel = client
+      .channel("home-rides")
+      .on("postgres_changes", { event: "*", schema: "public", table: "rides" }, () => {
+        fetchRecentRides(10).then(setFeaturedRides).catch(() => {});
+      })
+      .subscribe();
+    return () => {
+      client.removeChannel(channel);
+    };
   }, []);
 
   return (

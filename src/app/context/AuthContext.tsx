@@ -94,6 +94,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [refreshProfile]);
 
+  // Live updates: refetch this user's profile the instant their row changes
+  // (points awarded on completion, an accepted request, etc.) — no refresh.
+  useEffect(() => {
+    if (!supabase || !userId) return;
+    const client = supabase;
+    const channel = client
+      .channel(`profile-${userId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "profiles", filter: `id=eq.${userId}` },
+        () => refreshProfile()
+      )
+      .subscribe();
+    return () => {
+      client.removeChannel(channel);
+    };
+  }, [userId, refreshProfile]);
+
   const signIn = async (email: string, password: string) => {
     if (!supabase) throw new Error("Supabase isn't connected.");
     const { error } = await supabase.auth.signInWithPassword({ email, password });
