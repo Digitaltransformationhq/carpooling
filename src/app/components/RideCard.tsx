@@ -42,10 +42,16 @@ export function RideCard({ ride }: RideCardProps) {
         {/* Names: own row on mobile; on desktop they join the parent flex via
             `contents` so markers + connector sit between them */}
         <div className="flex items-center justify-between gap-3 sm:contents">
-          <p className="font-semibold truncate min-w-0 flex-1 sm:flex-none sm:order-1">
+          <p
+            title={ride.from}
+            className="font-semibold truncate min-w-0 flex-1 sm:flex-none sm:max-w-[40%] sm:order-1"
+          >
             {ride.from}
           </p>
-          <p className="font-semibold truncate min-w-0 flex-1 text-right sm:text-left sm:flex-none sm:order-5">
+          <p
+            title={ride.to}
+            className="font-semibold truncate min-w-0 flex-1 text-right sm:text-left sm:flex-none sm:max-w-[40%] sm:order-5"
+          >
             {ride.to}
           </p>
         </div>

@@ -81,14 +81,15 @@ export function PlaceAutocomplete({
 
   const choose = async (s: PlaceSuggestion) => {
     skipNextRef.current = true;
-    onChange(s.description);
+    // Fill with the concise name immediately; refine to "Name, City" once details load.
+    onChange(s.mainText || s.description);
     setOpen(false);
     setSuggestions([]);
     const details = await placeDetails(s.placeId, tokenRef.current);
     // A selection ends the billing session — start a fresh token.
     tokenRef.current = newSessionToken();
     if (details) {
-      if (details.label && details.label !== s.description) {
+      if (details.label) {
         skipNextRef.current = true;
         onChange(details.label);
       }

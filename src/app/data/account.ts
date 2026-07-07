@@ -40,6 +40,47 @@ export async function fetchUserStats(userId: string): Promise<UserStats> {
   };
 }
 
+export interface IncomingRequest {
+  bookingId: string;
+  rideId: string;
+  passengerName: string;
+  seats: number;
+  from: string;
+  to: string;
+  date: string;
+  pickupLabel: string | null;
+}
+
+/** Pending join requests on rides the user is driving (for their dashboard). */
+export async function fetchIncomingRequests(userId: string): Promise<IncomingRequest[]> {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("bookings")
+    .select(
+      "id, seats, passenger_name, pickup_label, ride_id, created_at, rides!inner(user_id, from_location, to_location, travel_date, completed)"
+    )
+    .eq("status", "pending")
+    .eq("rides.user_id", userId)
+    .order("created_at", { ascending: false });
+  if (error || !data) return [];
+  return ((data as any[]) ?? [])
+    .map((b) => {
+      const ride = Array.isArray(b.rides) ? b.rides[0] : b.rides;
+      if (!ride || ride.completed) return null;
+      return {
+        bookingId: b.id,
+        rideId: b.ride_id,
+        passengerName: b.passenger_name,
+        seats: b.seats,
+        from: ride.from_location,
+        to: ride.to_location,
+        date: ride.travel_date,
+        pickupLabel: b.pickup_label ?? null,
+      };
+    })
+    .filter(Boolean) as IncomingRequest[];
+}
+
 export async function fetchMyTrips(userId: string): Promise<Trip[]> {
   if (!supabase) return [];
 

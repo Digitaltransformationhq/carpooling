@@ -4,12 +4,23 @@ import { SearchBar } from "../components/SearchBar";
 import { RideCard } from "../components/RideCard";
 import { Ride } from "../data/mockData";
 import { fetchRecentRides } from "../data/rides";
+import {
+  fetchMyTrips,
+  fetchIncomingRequests,
+  type Trip,
+  type IncomingRequest,
+} from "../data/account";
 import { supabase } from "../lib/supabase";
-import { Leaf, Award, Users, BadgeCheck, Car, Gift, Search } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { formatDate } from "../lib/format";
+import { Leaf, Award, Users, BadgeCheck, Car, Gift, Search, Calendar } from "lucide-react";
 
 export function Home() {
+  const { user, profile } = useAuth();
   const [featuredRides, setFeaturedRides] = useState<Ride[]>([]);
   const [loadingRides, setLoadingRides] = useState(true);
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [incoming, setIncoming] = useState<IncomingRequest[]>([]);
 
   useEffect(() => {
     fetchRecentRides(10)
@@ -34,6 +45,43 @@ export function Home() {
     };
   }, []);
 
+  // Personalized dashboard data (logged-in users), kept live.
+  useEffect(() => {
+    if (!user) {
+      setTrips([]);
+      setIncoming([]);
+      return;
+    }
+    const load = () => {
+      fetchMyTrips(user.id).then(setTrips).catch(() => {});
+      fetchIncomingRequests(user.id).then(setIncoming).catch(() => {});
+    };
+    load();
+    if (!supabase) return;
+    const client = supabase;
+    const channel = client
+      .channel(`home-me-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "rides" }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "bookings" }, load)
+      .subscribe();
+    return () => {
+      client.removeChannel(channel);
+    };
+  }, [user]);
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const upcoming = trips
+    .filter((t) => !t.completed && t.date >= todayStr)
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(0, 4);
+  const firstName =
+    profile?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "there";
+  const points = profile?.points ?? 0;
+  const heroSubtitle =
+    points > 0
+      ? `You're on a roll — ${points} point${points === 1 ? "" : "s"} and counting! 🎉`
+      : "Your first ride, your first points. Let's go! 🚗";
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -44,10 +92,10 @@ export function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-4">
-              Share Rides, Earn Rewards
+              {user ? `Welcome back, ${firstName}` : "Share Rides, Earn Rewards"}
             </h1>
             <p className="text-xl text-foreground/70 max-w-2xl mx-auto mb-8">
-              Earn points every time you share or join a ride.
+              {user ? heroSubtitle : "Earn points every time you share or join a ride."}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
@@ -69,6 +117,93 @@ export function Home() {
           <SearchBar variant="hero" />
         </div>
       </section>
+
+      {/* Personalized dashboard — signed-in users only */}
+      {user && (
+        <section className="py-10 md:py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Requests waiting for the driver to accept */}
+            {incoming.length > 0 && (
+              <div className="mb-10">
+                <h3 className="text-lg font-semibold mb-3">Requests to review ({incoming.length})</h3>
+                <div className="space-y-3">
+                  {incoming.map((r) => (
+                    <Link
+                      key={r.bookingId}
+                      to={`/ride/${r.rideId}`}
+                      className="block border border-primary/40 bg-primary/5 rounded-xl p-4 hover:shadow-md hover:shadow-primary/10 transition-all"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">
+                            {r.passengerName} · {r.seats} {r.seats === 1 ? "seat" : "seats"}
+                          </p>
+                          <p className="text-sm text-muted-foreground truncate">
+                            {r.from} → {r.to} · {formatDate(r.date)}
+                          </p>
+                          {r.pickupLabel && (
+                            <p className="text-xs text-muted-foreground truncate">
+                              Pickup: {r.pickupLabel}
+                            </p>
+                          )}
+                        </div>
+                        <span className="text-primary text-sm font-medium shrink-0">Review →</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Your upcoming rides */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-semibold">Your upcoming rides</h3>
+                <Link to="/profile" className="text-sm text-primary hover:underline">
+                  View all
+                </Link>
+              </div>
+              {upcoming.length === 0 ? (
+                <div className="bg-card border border-border rounded-xl p-6 text-center text-muted-foreground">
+                  No upcoming rides yet —{" "}
+                  <Link to="/search" className="text-primary hover:underline">
+                    find a ride
+                  </Link>{" "}
+                  or{" "}
+                  <Link to="/publish" className="text-primary hover:underline">
+                    publish one
+                  </Link>
+                  .
+                </div>
+              ) : (
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {upcoming.map((t) => (
+                    <Link
+                      key={t.key}
+                      to={t.rideId ? `/ride/${t.rideId}` : "/profile"}
+                      className="block bg-card border border-border rounded-xl p-4 hover:border-primary hover:shadow-md hover:shadow-primary/10 transition-all"
+                    >
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                          {t.type === "driver" ? "Driving" : "Passenger"}
+                        </span>
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Calendar className="w-3.5 h-3.5" />
+                          {formatDate(t.date)}
+                        </span>
+                      </div>
+                      <p className="font-medium truncate">
+                        {t.from} → {t.to}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate mt-0.5">{t.detail}</p>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Popular Rides */}
       <section className="py-16">
@@ -111,6 +246,9 @@ export function Home() {
         </div>
       </section>
 
+      {/* Marketing sections — shown to logged-out visitors only */}
+      {!user && (
+        <>
       {/* Features Section */}
       <section className="py-16 bg-muted/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -220,6 +358,8 @@ export function Home() {
           </a>
         </div>
       </section>
+        </>
+      )}
     </div>
   );
 }

@@ -74,7 +74,48 @@ export async function placeAutocomplete(
   }
 }
 
-/** Exact coordinates + formatted address for a chosen suggestion (null on failure). */
+interface AddressComponent {
+  longText?: string;
+  types?: string[];
+}
+
+/**
+ * Build a short, readable label like "Natubhai Cir, Race Course, Vadodara"
+ * (location, area/suburb, city) from a place's name + components, instead of
+ * the long Google formatted address. Coordinates stay full-precision, so route
+ * matching is unaffected — only the display changes.
+ */
+function shortLabel(
+  name: string,
+  components: AddressComponent[],
+  formatted: string
+): string {
+  const pick = (...types: string[]) => {
+    for (const t of types) {
+      const c = components.find((x) => x.types?.includes(t))?.longText?.trim();
+      if (c) return c;
+    }
+    return "";
+  };
+  const city = pick("locality", "postal_town", "administrative_area_level_2");
+  const area = pick("sublocality_level_1", "sublocality", "neighborhood", "sublocality_level_2");
+  // location = the place's own name, or the first segment of the address
+  const location = name || formatted.split(",")[0]?.trim() || "";
+
+  // location, area, city — de-duplicated (case-insensitive), skipping blanks
+  const parts: string[] = [];
+  const seen = new Set<string>();
+  for (const p of [location, area, city]) {
+    const key = p.toLowerCase();
+    if (p && !seen.has(key)) {
+      seen.add(key);
+      parts.push(p);
+    }
+  }
+  return parts.join(", ") || formatted || "";
+}
+
+/** Exact coordinates + a short, clean label for a chosen suggestion (null on failure). */
 export async function placeDetails(
   placeId: string,
   sessionToken: string
@@ -87,14 +128,18 @@ export async function placeDetails(
     const res = await fetch(url, {
       headers: {
         "X-Goog-Api-Key": KEY,
-        "X-Goog-FieldMask": "formattedAddress,displayName,location",
+        "X-Goog-FieldMask": "formattedAddress,displayName,location,addressComponents",
       },
     });
     if (!res.ok) return null;
     const data = await res.json();
     const loc = data.location;
     if (!loc) return null;
-    const label = data.formattedAddress || data.displayName?.text || "";
+    const label = shortLabel(
+      data.displayName?.text?.trim() ?? "",
+      (data.addressComponents ?? []) as AddressComponent[],
+      data.formattedAddress ?? ""
+    );
     return { label, coords: { lat: loc.latitude, lng: loc.longitude } };
   } catch {
     return null;
