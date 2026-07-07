@@ -11,17 +11,25 @@ export function SearchResults() {
   const to = searchParams.get("to") || "";
   const date = searchParams.get("date") || "";
   const passengers = Number(searchParams.get("passengers") || "0");
+  // Precise coordinates of the picked places (from the search form), if present.
+  const flat = searchParams.get("flat");
+  const flng = searchParams.get("flng");
+  const tlat = searchParams.get("tlat");
+  const tlng = searchParams.get("tlng");
+  const fromCoords = flat && flng ? { lat: Number(flat), lng: Number(flng) } : null;
+  const toCoords = tlat && tlng ? { lat: Number(tlat), lng: Number(tlng) } : null;
 
   const [results, setResults] = useState<Ride[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
-    searchRides({ from, to, date, minSeats: passengers })
+    searchRides({ from, to, date, minSeats: passengers, fromCoords, toCoords })
       .then(setResults)
       .catch(() => setResults([]))
       .finally(() => setLoading(false));
-  }, [from, to, date, passengers]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [from, to, date, passengers, flat, flng, tlat, tlng]);
 
   return (
     <div className="min-h-screen bg-muted/30">

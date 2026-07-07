@@ -79,14 +79,14 @@ export function Home() {
   const points = profile?.points ?? 0;
   const heroSubtitle =
     points > 0
-      ? `You're on a roll — ${points} point${points === 1 ? "" : "s"} and counting! 🎉`
-      : "Your first ride, your first points. Let's go! 🚗";
+      ? `You're on a roll — ${points} point${points === 1 ? "" : "s"} and counting!`
+      : "Your first ride, your first points. Let's go!";
 
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
       <section
-        className="relative bg-cover bg-bottom bg-no-repeat py-20 md:py-32"
+        className="relative bg-cover bg-bottom bg-no-repeat py-20 md:py-32 min-h-[90vh] md:min-h-screen"
         style={{ backgroundImage: `url('/hero-bg.png')`, backgroundColor: "#f9f3ee" }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

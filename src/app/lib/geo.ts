@@ -162,3 +162,10 @@ export function corridorMatch(
   const onRoute = pu.dist <= halfWidth && dr.dist <= halfWidth && pu.along < dr.along;
   return { onRoute, pickupDist: Math.round(pu.dist), dropDist: Math.round(dr.dist) };
 }
+
+/** Nearest distance (metres) from a single point to a route (Infinity if none). */
+export function distanceToRoute(point: LatLng, route: Polyline): number {
+  if (!route || route.length < 2) return Infinity;
+  const lat0 = route[Math.floor(route.length / 2)][1];
+  return nearestOnRoute(point, route, lat0).dist;
+}

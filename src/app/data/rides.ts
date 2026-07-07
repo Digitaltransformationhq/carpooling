@@ -1,5 +1,12 @@
 import { supabase } from "../lib/supabase";
-import { geocode, routeBetween, corridorMatch, type Polyline } from "../lib/geo";
+import {
+  geocode,
+  routeBetween,
+  corridorMatch,
+  distanceToRoute,
+  type Polyline,
+  type LatLng,
+} from "../lib/geo";
 import { Ride } from "./mockData";
 
 /** Shape of a row in the `rides` table. */
@@ -92,6 +99,9 @@ export interface SearchFilters {
   to?: string;
   date?: string; // YYYY-MM-DD — rides on/after this date
   minSeats?: number;
+  /** Exact coordinates of the picked places — skip re-geocoding the text. */
+  fromCoords?: LatLng | null;
+  toCoords?: LatLng | null;
 }
 
 export async function searchRides(filters: SearchFilters = {}): Promise<Ride[]> {
@@ -114,30 +124,49 @@ export async function searchRides(filters: SearchFilters = {}): Promise<Ride[]> 
 
   if (!from && !to) return rides;
 
-  // Try route-corridor matching: geocode the rider's pickup + drop, then keep
-  // rides whose route passes within 500m of both points (in travel order).
-  if (from && to) {
-    try {
-      const [pickup, drop] = await Promise.all([geocode(from), geocode(to)]);
-      if (pickup && drop) {
-        const matched = rides
-          .map((ride) => {
-            if (ride.route && ride.route.length > 1) {
+  // Route-corridor matching: resolve whichever endpoints were given to exact
+  // coordinates (picked, or geocoded as a fallback), then keep rides whose
+  // route passes within 500m.
+  //  - both given  -> both points must be on the route, pickup before drop
+  //  - only one    -> the route must pass near that single point (e.g. "show
+  //                   me rides going through my pickup")
+  try {
+    const [pickup, drop] = await Promise.all([
+      from ? (filters.fromCoords ?? geocode(from)) : Promise.resolve(null),
+      to ? (filters.toCoords ?? geocode(to)) : Promise.resolve(null),
+    ]);
+
+    if (pickup || drop) {
+      const matched = rides
+        .map((ride) => {
+          if (ride.route && ride.route.length > 1) {
+            if (pickup && drop) {
               const m = corridorMatch(pickup, drop, ride.route);
               return m.onRoute
                 ? { ...ride, onRoute: { pickupDist: m.pickupDist, dropDist: m.dropDist } }
                 : null;
             }
-            // no geometry stored → fall back to text match for this ride
-            return textMatch(ride, from, to) ? ride : null;
-          })
-          .filter((r): r is Ride => r !== null)
-          .sort((a, b) => (a.onRoute?.pickupDist ?? 1e9) - (b.onRoute?.pickupDist ?? 1e9));
-        return matched;
-      }
-    } catch {
-      // geocoding/routing unavailable — fall through to text matching
+            // single point: route just needs to pass within 500m of it
+            const pt = (pickup ?? drop) as LatLng;
+            const dist = distanceToRoute(pt, ride.route);
+            if (dist > 500) return null;
+            return {
+              ...ride,
+              onRoute: {
+                pickupDist: pickup ? Math.round(dist) : 0,
+                dropDist: drop ? Math.round(dist) : 0,
+              },
+            };
+          }
+          // no stored route → fall back to text match for this ride
+          return textMatch(ride, from, to) ? ride : null;
+        })
+        .filter((r): r is Ride => r !== null)
+        .sort((a, b) => (a.onRoute?.pickupDist ?? 1e9) - (b.onRoute?.pickupDist ?? 1e9));
+      return matched;
     }
+  } catch {
+    // geocoding/routing unavailable — fall through to text matching
   }
 
   // Fallback: simple text match on the typed locations.

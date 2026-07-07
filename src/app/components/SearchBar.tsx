@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { MapPin, Calendar, Users, Search, LocateFixed, Loader2, ChevronDown } from "lucide-react";
-import { detectCurrentLocation } from "../lib/geo";
+import { detectCurrentLocation, type LatLng } from "../lib/geo";
 import { PlaceAutocomplete } from "./PlaceAutocomplete";
 import { EventDatePicker } from "./EventDatePicker";
 
@@ -16,6 +16,10 @@ export function SearchBar({ variant = "hero" }: SearchBarProps) {
   const [date, setDate] = useState("");
   const [passengers, setPassengers] = useState("1");
   const [locating, setLocating] = useState(false);
+  // Exact coordinates of the picked places, so route-corridor matching uses
+  // the precise point (not a re-geocode of the text label).
+  const [fromCoords, setFromCoords] = useState<LatLng | null>(null);
+  const [toCoords, setToCoords] = useState<LatLng | null>(null);
 
   // earliest selectable date — today (local), so past dates can't be searched
   const today = new Date();
@@ -26,8 +30,9 @@ export function SearchBar({ variant = "hero" }: SearchBarProps) {
   const handleDetectLocation = async () => {
     setLocating(true);
     try {
-      const { label, accuracy } = await detectCurrentLocation();
+      const { label, coords, accuracy } = await detectCurrentLocation();
       setFrom(label);
+      setFromCoords(coords);
       if (accuracy > 1000) {
         alert(
           `Your location was only accurate to ~${Math.round(accuracy / 1000)} km ` +
@@ -49,6 +54,14 @@ export function SearchBar({ variant = "hero" }: SearchBarProps) {
       date: date || "",
       passengers: passengers || "1",
     });
+    if (fromCoords) {
+      params.set("flat", String(fromCoords.lat));
+      params.set("flng", String(fromCoords.lng));
+    }
+    if (toCoords) {
+      params.set("tlat", String(toCoords.lat));
+      params.set("tlng", String(toCoords.lng));
+    }
     navigate(`/search?${params.toString()}`);
   };
 
@@ -61,8 +74,14 @@ export function SearchBar({ variant = "hero" }: SearchBarProps) {
             <PlaceAutocomplete
               placeholder="From"
               value={from}
-              onChange={setFrom}
-              onSelect={({ label }) => setFrom(label)}
+              onChange={(t) => {
+                setFrom(t);
+                setFromCoords(null);
+              }}
+              onSelect={({ label, coords }) => {
+                setFrom(label);
+                setFromCoords(coords);
+              }}
               className="w-full pl-10 pr-10 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <button
@@ -84,8 +103,14 @@ export function SearchBar({ variant = "hero" }: SearchBarProps) {
             <PlaceAutocomplete
               placeholder="To"
               value={to}
-              onChange={setTo}
-              onSelect={({ label }) => setTo(label)}
+              onChange={(t) => {
+                setTo(t);
+                setToCoords(null);
+              }}
+              onSelect={({ label, coords }) => {
+                setTo(label);
+                setToCoords(coords);
+              }}
               className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
@@ -124,8 +149,14 @@ export function SearchBar({ variant = "hero" }: SearchBarProps) {
             <PlaceAutocomplete
               placeholder="City or address"
               value={from}
-              onChange={setFrom}
-              onSelect={({ label }) => setFrom(label)}
+              onChange={(t) => {
+                setFrom(t);
+                setFromCoords(null);
+              }}
+              onSelect={({ label, coords }) => {
+                setFrom(label);
+                setFromCoords(coords);
+              }}
               className={`${field} pr-10`}
               required
             />
