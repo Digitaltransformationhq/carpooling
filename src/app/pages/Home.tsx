@@ -1,13 +1,11 @@
-import { Suspense, lazy, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { SearchBar } from "../components/SearchBar";
 import { RideCard } from "../components/RideCard";
 import { Ride } from "../data/mockData";
 import { fetchRecentRides } from "../data/rides";
 import { supabase } from "../lib/supabase";
-import { Leaf, Award, Users, BadgeCheck, MapPin, Car, Gift, Search } from "lucide-react";
-
-const RidesMap = lazy(() => import("../components/RidesMap"));
+import { Leaf, Award, Users, BadgeCheck, Car, Gift, Search } from "lucide-react";
 
 export function Home() {
   const [featuredRides, setFeaturedRides] = useState<Ride[]>([]);
@@ -201,36 +199,16 @@ export function Home() {
         </div>
       </section>
 
-      {/* Map Section */}
-      <section className="py-16 bg-muted/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-2 mb-2">
-            <MapPin className="w-7 h-7 text-primary" />
-            <h2 className="text-3xl font-bold">Explore Rides on the Map</h2>
-          </div>
-          <p className="text-muted-foreground mb-8">
-            See where our community is travelling. Tap a pin to view rides from that city.
-          </p>
-          <Suspense
-            fallback={<div className="h-[420px] w-full rounded-xl bg-muted animate-pulse" />}
-          >
-            <RidesMap />
-          </Suspense>
-        </div>
-      </section>
-
       {/* CTA Section */}
       <section
-        className="relative bg-cover bg-center py-20"
-        style={{
-          backgroundImage: `linear-gradient(rgba(3, 2, 19, 0.85), rgba(3, 2, 19, 0.85)), url('https://images.unsplash.com/photo-1539635278303-d4002c07eae3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwZW9wbGUlMjB0cmF2ZWxpbmclMjB0b2dldGhlcnxlbnwxfHx8fDE3ODAzNzg4MTl8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral')`,
-        }}
+        className="relative bg-cover bg-top bg-no-repeat pt-16 md:pt-20 pb-8 min-h-[520px] md:min-h-[600px]"
+        style={{ backgroundImage: `url('/cta-bg.png')`, backgroundColor: "#dfd6ce" }}
       >
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
+          <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
             Share Rides, Shrink Your Carbon Footprint
           </h2>
-          <p className="text-xl text-white/90 mb-8">
+          <p className="text-xl text-foreground/70 mb-8">
             Every shared seat means fewer cars and less CO₂. Publish a ride, fill empty seats, and
             travel greener together.
           </p>

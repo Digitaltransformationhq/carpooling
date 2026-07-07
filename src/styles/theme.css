@@ -216,3 +216,57 @@
   -webkit-mask-image: repeating-linear-gradient(to right, #000 0 14px, transparent 14px 19px);
   mask-image: repeating-linear-gradient(to right, #000 0 14px, transparent 14px 19px);
 }
+
+/* A glowing yellow light that travels smoothly around a card's grey outline.
+   A short bright arc on a rotating conic gradient, masked to the border ring so
+   it rides the rounded outline with smooth corners. `inset: -1px` puts it right
+   on the card's 1px grey border. */
+@property --beam-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes beam-run {
+  to {
+    --beam-angle: 360deg;
+  }
+}
+
+.search-glow {
+  position: relative;
+}
+
+.search-glow::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 2px;
+  pointer-events: none;
+  background: conic-gradient(
+    from var(--beam-angle),
+    transparent 0deg,
+    transparent 290deg,
+    #fbbf24 328deg,
+    #fde047 345deg,
+    #fbbf24 352deg,
+    transparent 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.9));
+  animation: beam-run 8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search-glow::before {
+    animation: none;
+  }
+}

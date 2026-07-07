@@ -112,7 +112,7 @@ export function SearchBar({ variant = "hero" }: SearchBarProps) {
   return (
     <form
       onSubmit={handleSearch}
-      className="bg-card/95 backdrop-blur-xl border border-border/60 ring-1 ring-black/5 rounded-3xl shadow-2xl shadow-black/10 p-5 md:p-7 max-w-4xl mx-auto"
+      className="search-glow bg-card/95 backdrop-blur-xl border border-border/60 ring-1 ring-black/5 rounded-3xl shadow-[0_30px_60px_-12px_rgba(0,0,0,0.35),0_12px_24px_-10px_rgba(0,0,0,0.25)] p-5 md:p-7 max-w-4xl mx-auto"
     >
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-5">
         <div className="space-y-1.5">

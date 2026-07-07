@@ -41,11 +41,16 @@ export function Header() {
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
-              <NavLink to="/connect" className={navLinkClass}>
-                Peer Connect
-              </NavLink>
+              {user && (
+                <NavLink to="/profile" className={navLinkClass}>
+                  My Rides
+                </NavLink>
+              )}
               <NavLink to="/events" className={navLinkClass}>
                 Forthcoming Events
+              </NavLink>
+              <NavLink to="/connect" className={navLinkClass}>
+                Peer Connect
               </NavLink>
               {profile?.is_admin && (
                 <NavLink to="/admin" className={navLinkClass}>
@@ -114,19 +119,28 @@ export function Header() {
           {/* Mobile Menu */}
           {mobileMenuOpen && (
             <div className="md:hidden border-t border-border/70 py-3 space-y-1">
-              <Link
-                to="/connect"
-                className="block px-4 py-2.5 text-foreground/80 hover:bg-accent rounded-xl transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Peer Connect
-              </Link>
+              {user && (
+                <Link
+                  to="/profile"
+                  className="block px-4 py-2.5 text-foreground/80 hover:bg-accent rounded-xl transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  My Rides
+                </Link>
+              )}
               <Link
                 to="/events"
                 className="block px-4 py-2.5 text-foreground/80 hover:bg-accent rounded-xl transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Forthcoming Events
+              </Link>
+              <Link
+                to="/connect"
+                className="block px-4 py-2.5 text-foreground/80 hover:bg-accent rounded-xl transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Peer Connect
               </Link>
               {profile?.is_admin && (
                 <Link

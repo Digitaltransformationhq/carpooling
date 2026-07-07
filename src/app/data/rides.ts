@@ -286,19 +286,40 @@ export async function markRideNotStarted(rideId: string): Promise<void> {
 
 export type BookingStatus = "pending" | "accepted";
 
+/** Where a rider wants to get on / off (a point along the driver's route). */
+export interface BookingStop {
+  label: string;
+  lat: number;
+  lng: number;
+}
+
 export interface RideBooking {
   id: string;
   passenger_name: string;
   passenger_phone: string | null;
   seats: number;
   status: BookingStatus;
+  pickup_label: string | null;
+  pickup_lat: number | null;
+  pickup_lng: number | null;
+  drop_label: string | null;
+  drop_lat: number | null;
+  drop_lng: number | null;
 }
+
+const BOOKING_COLUMNS =
+  "id, passenger_name, passenger_phone, seats, status, pickup_label, pickup_lat, pickup_lng, drop_label, drop_lat, drop_lng";
 
 /**
  * Rider requests to join a ride. Creates a PENDING request — the seat isn't
  * reserved until the driver accepts it (see {@link acceptBooking}).
  */
-export async function requestBooking(rideId: string, seats = 1): Promise<void> {
+export async function requestBooking(
+  rideId: string,
+  seats = 1,
+  pickup?: BookingStop | null,
+  drop?: BookingStop | null
+): Promise<void> {
   if (!supabase) {
     throw new Error("Supabase isn't connected yet — add your keys to .env to request a seat.");
   }
@@ -320,6 +341,13 @@ export async function requestBooking(rideId: string, seats = 1): Promise<void> {
     passenger_phone: prof?.phone ?? null,
     user_id: user.id,
     status: "pending",
+    // where the rider wants to hop on / off along the route (optional)
+    pickup_label: pickup?.label ?? null,
+    pickup_lat: pickup?.lat ?? null,
+    pickup_lng: pickup?.lng ?? null,
+    drop_label: drop?.label ?? null,
+    drop_lat: drop?.lat ?? null,
+    drop_lng: drop?.lng ?? null,
   });
   if (error) throw error;
 }
@@ -336,11 +364,11 @@ export async function fetchRideBookings(rideId: string): Promise<RideBooking[]> 
   if (!supabase) return [];
   const { data, error } = await supabase
     .from("bookings")
-    .select("id, passenger_name, passenger_phone, seats, status")
+    .select(BOOKING_COLUMNS)
     .eq("ride_id", rideId)
     .order("created_at", { ascending: true });
   if (error) throw error;
-  return (data as RideBooking[]) ?? [];
+  return (data as unknown as RideBooking[]) ?? [];
 }
 
 /** Cancel a booking — by the rider (cancel) or the driver (remove rider). Frees the seat(s). */
@@ -357,11 +385,11 @@ export async function fetchMyBookings(rideId: string): Promise<RideBooking[]> {
   if (!auth.user) return [];
   const { data, error } = await supabase
     .from("bookings")
-    .select("id, passenger_name, passenger_phone, seats, status")
+    .select(BOOKING_COLUMNS)
     .eq("ride_id", rideId)
     .eq("user_id", auth.user.id);
   if (error) throw error;
-  return (data as RideBooking[]) ?? [];
+  return (data as unknown as RideBooking[]) ?? [];
 }
 
 /**

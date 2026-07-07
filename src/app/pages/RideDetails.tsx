@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { useParams, useNavigate } from "react-router";
 import { Ride } from "../data/mockData";
 import {
@@ -14,12 +14,16 @@ import {
   fetchMyBookings,
   cancelMyBooking,
   type RideBooking,
+  type BookingStop,
 } from "../data/rides";
 import { fetchProfile } from "../data/profiles";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { formatDate, formatTime } from "../lib/format";
-import { Clock, Shield, Phone, Users, ChevronLeft, Plus, Minus, Check, X, Bike, Car } from "lucide-react";
+import { PlaceAutocomplete } from "../components/PlaceAutocomplete";
+import { Clock, Shield, Phone, Users, ChevronLeft, Plus, Minus, Check, X, Bike, Car, MapPin } from "lucide-react";
+
+const RideRouteMap = lazy(() => import("../components/RideRouteMap"));
 
 const FALLBACK_PHONE = "+91 98765 43210";
 
@@ -32,6 +36,11 @@ export function RideDetails() {
   const [booking, setBooking] = useState(false);
   const [driverPhone, setDriverPhone] = useState("");
   const [passengers, setPassengers] = useState(1);
+  // Where the rider wants to hop on / off along the route (optional).
+  const [pickupText, setPickupText] = useState("");
+  const [pickup, setPickup] = useState<BookingStop | null>(null);
+  const [dropText, setDropText] = useState("");
+  const [drop, setDrop] = useState<BookingStop | null>(null);
   const [cancelCount, setCancelCount] = useState(1);
   const [riders, setRiders] = useState<RideBooking[]>([]);
   const [myBookings, setMyBookings] = useState<RideBooking[]>([]);
@@ -156,7 +165,7 @@ export function RideDetails() {
     }
     setBooking(true);
     try {
-      await requestBooking(ride.id, seats);
+      await requestBooking(ride.id, seats, pickup, drop);
       alert(
         `Request sent for ${seats} ${seats === 1 ? "seat" : "seats"}! ` +
           "The driver will confirm it shortly."
@@ -164,6 +173,10 @@ export function RideDetails() {
       await refreshRide(ride.id);
       fetchMyBookings(ride.id).then(setMyBookings).catch(() => {});
       setPassengers(1);
+      setPickupText("");
+      setPickup(null);
+      setDropText("");
+      setDrop(null);
     } catch (err) {
       alert(err instanceof Error ? err.message : "Request failed");
     } finally {
@@ -273,6 +286,15 @@ export function RideDetails() {
   const maxRequestable = Math.max(0, available - myPending);
   const pendingRiders = riders.filter((r) => r.status === "pending");
   const acceptedRiders = riders.filter((r) => r.status === "accepted");
+  // Pickup pins to plot on the route: the driver sees every rider's pickup;
+  // a rider sees their own.
+  const pickupStops = (isOwner ? riders : myBookings)
+    .filter((b) => b.pickup_lat != null && b.pickup_lng != null)
+    .map((b) => ({
+      lng: b.pickup_lng as number,
+      lat: b.pickup_lat as number,
+      label: isOwner ? `${b.passenger_name} · pickup` : "Your pickup",
+    }));
   const isStarted = !!ride.started && !isCompleted;
   const statusLabel = isCompleted ? "Completed" : isStarted ? "On the way" : "Upcoming";
   const statusClass = isCompleted
@@ -429,6 +451,17 @@ export function RideDetails() {
                               <p className="text-xs text-muted-foreground">
                                 wants {r.seats} {r.seats === 1 ? "seat" : "seats"}
                               </p>
+                              {r.pickup_label && (
+                                <p className="text-xs text-foreground/80 flex items-center gap-1 truncate mt-0.5">
+                                  <MapPin className="w-3 h-3 shrink-0 text-primary" />
+                                  Pickup: {r.pickup_label}
+                                </p>
+                              )}
+                              {r.drop_label && (
+                                <p className="text-xs text-muted-foreground truncate">
+                                  Drop: {r.drop_label}
+                                </p>
+                              )}
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
                               <button
@@ -478,6 +511,17 @@ export function RideDetails() {
                               <p className="text-xs text-muted-foreground">
                                 {r.seats} {r.seats === 1 ? "seat" : "seats"}
                               </p>
+                              {r.pickup_label && (
+                                <p className="text-xs text-foreground/80 flex items-center gap-1 truncate mt-0.5">
+                                  <MapPin className="w-3 h-3 shrink-0 text-primary" />
+                                  Pickup: {r.pickup_label}
+                                </p>
+                              )}
+                              {r.drop_label && (
+                                <p className="text-xs text-muted-foreground truncate">
+                                  Drop: {r.drop_label}
+                                </p>
+                              )}
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
                               {r.passenger_phone ? (
@@ -626,6 +670,49 @@ export function RideDetails() {
                     </>
                   ) : (
                     <>
+                      {/* Where the rider hops on / off along the driver's route */}
+                      <div className="space-y-3 mb-5">
+                        <div className="space-y-1.5">
+                          <label className="text-sm font-medium flex items-center gap-1.5">
+                            <MapPin className="w-4 h-4 text-primary" /> Pickup point
+                          </label>
+                          <PlaceAutocomplete
+                            placeholder="Where should the driver pick you up?"
+                            value={pickupText}
+                            onChange={(t) => {
+                              setPickupText(t);
+                              setPickup(null);
+                            }}
+                            onSelect={({ label, coords }) => {
+                              setPickupText(label);
+                              setPickup({ label, lat: coords.lat, lng: coords.lng });
+                            }}
+                            className="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-sm font-medium flex items-center gap-1.5">
+                            <MapPin className="w-4 h-4 text-primary" /> Drop-off point
+                          </label>
+                          <PlaceAutocomplete
+                            placeholder="Where do you want to get off?"
+                            value={dropText}
+                            onChange={(t) => {
+                              setDropText(t);
+                              setDrop(null);
+                            }}
+                            onSelect={({ label, coords }) => {
+                              setDropText(label);
+                              setDrop({ label, lat: coords.lat, lng: coords.lng });
+                            }}
+                            className="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Optional — lets the driver pick you up along their route.
+                        </p>
+                      </div>
+
                       {/* Passenger selector */}
                       <div className="flex items-center justify-between mb-5">
                         <span className="text-sm font-medium">Passengers</span>
@@ -679,6 +766,26 @@ export function RideDetails() {
               )}
             </div>
           </div>
+
+          {/* Route map — this ride's path + any rider pickup points (private) */}
+          {ride.route && ride.route.length > 1 && (
+            <div className="bg-card border border-primary rounded-xl p-4">
+              <p className="font-medium mb-3 flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-primary" />
+                Route
+                {pickupStops.length > 0 && (
+                  <span className="text-sm font-normal text-muted-foreground">
+                    · {pickupStops.length} pickup {pickupStops.length === 1 ? "point" : "points"}
+                  </span>
+                )}
+              </p>
+              <Suspense
+                fallback={<div className="h-[320px] w-full rounded-xl bg-muted animate-pulse" />}
+              >
+                <RideRouteMap route={ride.route} pickups={pickupStops} />
+              </Suspense>
+            </div>
+          )}
 
           {/* Driver card */}
           <div className="bg-card border border-primary rounded-xl p-6">
