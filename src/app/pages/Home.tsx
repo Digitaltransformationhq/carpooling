@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import { SearchBar } from "../components/SearchBar";
 import { RideCard } from "../components/RideCard";
 import { Ride } from "../data/mockData";
@@ -17,10 +17,26 @@ import { Leaf, Award, Users, BadgeCheck, Car, Gift, Search, Calendar } from "luc
 
 export function Home() {
   const { user, profile } = useAuth();
+  const location = useLocation();
   const [featuredRides, setFeaturedRides] = useState<Ride[]>([]);
   const [loadingRides, setLoadingRides] = useState(true);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [incoming, setIncoming] = useState<IncomingRequest[]>([]);
+
+  // Post-login / deep link: scroll to "Rides Leaving Soon". Email sign-in sets
+  // the URL hash; Google sign-in survives the OAuth round-trip via a one-shot
+  // sessionStorage flag. Re-runs as content above loads (its position shifts).
+  useEffect(() => {
+    const wantScroll =
+      location.hash === "#rides-leaving-soon" ||
+      sessionStorage.getItem("scrollTo") === "rides-leaving-soon";
+    if (!wantScroll) return;
+    const el = document.getElementById("rides-leaving-soon");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      sessionStorage.removeItem("scrollTo");
+    }
+  }, [location.hash, loadingRides, trips, incoming]);
 
   useEffect(() => {
     fetchRecentRides(10)
@@ -206,7 +222,7 @@ export function Home() {
       )}
 
       {/* Popular Rides */}
-      <section className="py-16">
+      <section id="rides-leaving-soon" className="py-16 scroll-mt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold mb-8">Rides Leaving Soon</h2>
 

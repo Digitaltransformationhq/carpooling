@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Navigate, useSearchParams } from "react-router";
 import { MapPin, Calendar, Clock, Users, LocateFixed, Loader2, ChevronDown } from "lucide-react";
 import { createRide } from "../data/rides";
@@ -13,6 +13,12 @@ function todayLocal(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
     d.getDate()
   ).padStart(2, "0")}`;
+}
+
+// 12-hour (hour + AM/PM) → 24-hour, so we can compare against the current time.
+function to24(hour: string, ampm: string): number {
+  const n = Number(hour) % 12;
+  return ampm === "PM" ? n + 12 : n;
 }
 
 export function PublishRide() {
@@ -41,6 +47,15 @@ export function PublishRide() {
     if (!formData.date) {
       alert("Please select a travel date.");
       return;
+    }
+    // For a ride today, block a departure time that's already in the past.
+    if (formData.date === todayLocal() && formData.hour && formData.minute) {
+      const depart = new Date();
+      depart.setHours(to24(formData.hour, formData.ampm), Number(formData.minute), 0, 0);
+      if (depart.getTime() < Date.now()) {
+        alert("Please pick a departure time later than the current time.");
+        return;
+      }
     }
     setSubmitting(true);
     try {
@@ -98,6 +113,28 @@ export function PublishRide() {
   }
 
   const minDate = todayLocal();
+
+  // When the ride is today, grey out (disable) times that have already passed
+  // so users can't publish a ride in the past.
+  const isToday = formData.date === todayLocal();
+  const now = new Date();
+  const nowH = now.getHours();
+  const nowM = now.getMinutes();
+  const amDisabled = isToday && nowH >= 12; // no AM slot left once it's noon
+  const hourDisabled = (h: string) => isToday && to24(h, formData.ampm) < nowH;
+  const minuteDisabled = (mm: string) =>
+    isToday &&
+    formData.hour !== "" &&
+    to24(formData.hour, formData.ampm) === nowH &&
+    Number(mm) < nowM;
+
+  // If AM is no longer valid (afternoon, ride today), don't leave it selected —
+  // that would disable every hour and lock the form.
+  useEffect(() => {
+    if (amDisabled && formData.ampm === "AM") {
+      setFormData((f) => ({ ...f, ampm: "PM", hour: "", minute: "" }));
+    }
+  }, [amDisabled, formData.ampm]);
 
   return (
     <div className="min-h-screen bg-muted/30 py-12">
@@ -207,7 +244,7 @@ export function PublishRide() {
                           Hour
                         </option>
                         {Array.from({ length: 12 }, (_, i) => String(i + 1)).map((h) => (
-                          <option key={h} value={h}>
+                          <option key={h} value={h} disabled={hourDisabled(h)}>
                             {h}
                           </option>
                         ))}
@@ -228,7 +265,7 @@ export function PublishRide() {
                         </option>
                         {Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, "0")).map(
                           (mm) => (
-                            <option key={mm} value={mm}>
+                            <option key={mm} value={mm} disabled={minuteDisabled(mm)}>
                               {mm}
                             </option>
                           )

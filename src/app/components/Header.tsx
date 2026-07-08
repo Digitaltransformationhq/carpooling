@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router";
-import { User, Menu, X, LogOut, Award } from "lucide-react";
+import { User, Menu, X, Award } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useAuthModal } from "../context/AuthModalContext";
@@ -14,19 +14,13 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
 export function Header() {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, profile, signOut } = useAuth();
+  const { user, profile } = useAuth();
   const { openLogin } = useAuthModal();
   const displayName =
     profile?.full_name ||
     (user?.user_metadata?.full_name as string) ||
     user?.email?.split("@")[0] ||
     "Profile";
-
-  const handleSignOut = async () => {
-    await signOut();
-    setMobileMenuOpen(false);
-    navigate("/");
-  };
 
   return (
     <header className="fixed top-0 inset-x-0 z-50 px-3 sm:px-5 pt-3 sm:pt-4">
@@ -71,7 +65,8 @@ export function Header() {
                     {profile?.points ?? 0}
                   </span>
                   <button
-                    onClick={() => navigate("/profile")}
+                    onClick={() => navigate("/account")}
+                    title="Your account"
                     className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border border-transparent hover:border-border hover:bg-accent transition-colors"
                   >
                     {profile?.avatar_url ? (
@@ -86,13 +81,6 @@ export function Header() {
                       </span>
                     )}
                     <span className="max-w-[8rem] truncate text-sm font-medium">{displayName}</span>
-                  </button>
-                  <button
-                    onClick={handleSignOut}
-                    title="Log out"
-                    className="flex items-center justify-center w-9 h-9 rounded-full text-destructive hover:bg-destructive/10 transition-colors"
-                  >
-                    <LogOut className="w-4 h-4" />
                   </button>
                 </>
               ) : (
@@ -155,22 +143,16 @@ export function Header() {
               {user ? (
                 <>
                   <Link
-                    to="/profile"
+                    to="/account"
                     className="flex items-center justify-between px-4 py-2.5 text-foreground/80 hover:bg-accent rounded-xl transition-colors"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    <span>Profile</span>
+                    <span>Account</span>
                     <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary font-semibold text-sm">
                       <Award className="w-4 h-4" />
                       {profile?.points ?? 0}
                     </span>
                   </Link>
-                  <button
-                    onClick={handleSignOut}
-                    className="block w-full text-left px-4 py-2.5 text-destructive hover:bg-destructive/10 rounded-xl transition-colors"
-                  >
-                    Log out
-                  </button>
                 </>
               ) : (
                 <button

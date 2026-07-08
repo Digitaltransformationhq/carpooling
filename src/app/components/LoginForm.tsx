@@ -26,10 +26,11 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
 
   const isSignup = mode === "signup";
 
-  // On success: close the modal if we're in one, otherwise go to the profile.
+  // On success: close the modal if we're in one, then land on the home page
+  // scrolled to "Rides Leaving Soon" so users go straight to bookable rides.
   const done = () => {
-    if (onSuccess) onSuccess();
-    else navigate("/profile");
+    onSuccess?.();
+    navigate("/#rides-leaving-soon");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -78,6 +79,8 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
     setInfo("");
     setBusy(true);
     try {
+      // survive the OAuth round-trip: on return, Home reads this and scrolls.
+      sessionStorage.setItem("scrollTo", "rides-leaving-soon");
       await signInWithGoogle();
       // redirects to Google; control returns to the app afterwards.
     } catch (err) {

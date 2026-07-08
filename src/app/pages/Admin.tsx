@@ -4,6 +4,7 @@ import { CalendarPlus, Trash2, Loader2, ShieldAlert, Clock, MapPin } from "lucid
 import { useAuth } from "../context/AuthContext";
 import { fetchProfile } from "../data/profiles";
 import { fetchAllEvents, createEvent, deleteEvent, type EventItem } from "../data/events";
+import { PlaceAutocomplete } from "../components/PlaceAutocomplete";
 
 function todayLocal(): string {
   const d = new Date();
@@ -178,10 +179,10 @@ export function Admin() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1.5">Location</label>
-                <input
-                  type="text"
+                <PlaceAutocomplete
                   value={form.location}
-                  onChange={(e) => setForm({ ...form, location: e.target.value })}
+                  onChange={(text) => setForm({ ...form, location: text })}
+                  onSelect={({ label }) => setForm({ ...form, location: label })}
                   placeholder="Venue, city"
                   className="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 />

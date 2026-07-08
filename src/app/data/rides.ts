@@ -72,7 +72,15 @@ export async function fetchRides(): Promise<Ride[]> {
   return (data as RideRow[]).map(mapRow);
 }
 
-/** Most recently published rides first (for the home page). Excludes completed rides. */
+/** Today as a local YYYY-MM-DD string (so past rides drop off at local midnight). */
+function todayStr(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+    d.getDate()
+  ).padStart(2, "0")}`;
+}
+
+/** Most recently published rides first (for the home page). Excludes completed and past rides. */
 export async function fetchRecentRides(limit = 10): Promise<Ride[]> {
   if (!supabase) return [];
   const { data, error } = await supabase
@@ -80,6 +88,7 @@ export async function fetchRecentRides(limit = 10): Promise<Ride[]> {
     .select("*")
     .eq("completed", false)
     .eq("started", false) // hide rides already on the way
+    .gte("travel_date", todayStr()) // hide rides whose date has already passed
     .not("user_id", "is", null) // only real, user-published rides (hides seed/dummy data)
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -115,6 +124,7 @@ export async function searchRides(filters: SearchFilters = {}): Promise<Ride[]> 
     .select("*")
     .eq("completed", false)
     .eq("started", false) // hide rides already on the way
+    .gte("travel_date", todayStr()) // hide rides whose date has already passed
     .not("user_id", "is", null); // only real, user-published rides
   if (date) q = q.gte("travel_date", date);
   if (minSeats) q = q.gte("seats", minSeats);

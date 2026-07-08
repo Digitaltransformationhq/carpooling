@@ -86,9 +86,7 @@ export function RideCard({ ride }: RideCardProps) {
       {ride.onRoute && (
         <div className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-primary bg-primary/10 rounded-full px-3 py-1">
           <Route className="w-3.5 h-3.5" />
-          <span>
-            On your way · pickup ~{ride.onRoute.pickupDist} m off route
-          </span>
+          <span>On your way</span>
         </div>
       )}
 

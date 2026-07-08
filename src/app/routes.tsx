@@ -9,6 +9,7 @@ import { ForthcomingEvents } from "./pages/ForthcomingEvents";
 import { Admin } from "./pages/Admin";
 import { AdminLogin } from "./pages/AdminLogin";
 import { Profile } from "./pages/Profile";
+import { Account } from "./pages/Account";
 import { Login } from "./pages/Login";
 import { NotFound } from "./pages/NotFound";
 
@@ -26,6 +27,7 @@ export const router = createBrowserRouter([
       { path: "admin", Component: Admin },
       { path: "admin/login", Component: AdminLogin },
       { path: "profile", Component: Profile },
+      { path: "account", Component: Account },
       { path: "login", Component: Login },
       { path: "*", Component: NotFound },
     ],

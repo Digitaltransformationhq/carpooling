@@ -49,27 +49,22 @@ export function PeerConnect() {
     <div className="min-h-screen bg-muted/30 py-10">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-2">
-          <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-full">
-            <Users className="w-6 h-6 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold">Peer Connect</h1>
-            <p className="text-muted-foreground">
-              Find and connect with fellow CAs registered on the platform.
-            </p>
-          </div>
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold tracking-tight">Peer Connect</h1>
+          <p className="text-muted-foreground mt-1">
+            Find and connect with fellow CAs registered on the platform.
+          </p>
         </div>
 
         {/* Search */}
-        <div className="relative my-6">
+        <div className="relative mb-8">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search members by name or membership ID..."
-            className="w-full pl-12 pr-4 py-3 border rounded-xl bg-card focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full pl-12 pr-4 py-3 rounded-full bg-card border border-border focus:outline-none focus:ring-2 focus:ring-primary/60 focus:border-transparent transition-shadow"
           />
         </div>
 
@@ -80,8 +75,8 @@ export function PeerConnect() {
             Searching members…
           </div>
         ) : members.length === 0 ? (
-          <div className="bg-card border border-primary rounded-xl p-10 text-center">
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-primary/15 rounded-full mb-4">
+          <div className="bg-card border border-dashed border-border rounded-2xl p-12 text-center">
+            <div className="inline-flex items-center justify-center w-14 h-14 bg-primary/10 rounded-full mb-4">
               <Users className="w-7 h-7 text-primary" />
             </div>
             <p className="font-semibold text-lg mb-1">No members found</p>
@@ -96,58 +91,61 @@ export function PeerConnect() {
             {members.map((m) => (
               <div
                 key={m.id}
-                className="bg-card border border-border rounded-xl p-5 flex flex-col transition-all hover:border-primary hover:shadow-md hover:shadow-primary/10"
+                className="group bg-card border border-border/60 rounded-2xl p-6 flex flex-col items-center text-center transition-all hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-0.5"
               >
-                <div className="flex items-center gap-4">
-                  <img
-                    src={m.avatar_url || AVATAR}
-                    alt={m.full_name ?? "Member"}
-                    className="w-14 h-14 rounded-full object-cover shrink-0"
-                  />
-                  <div className="min-w-0">
-                    <h2 className="font-semibold truncate">{m.full_name}</h2>
-                    {m.membership_id && (
-                      <p className="text-xs text-muted-foreground">
-                        Membership ID: {m.membership_id}
-                      </p>
-                    )}
-                    {m.created_at && (
-                      <p className="text-xs text-muted-foreground">
-                        Member since {memberSince(m.created_at)}
-                      </p>
-                    )}
-                    <span className="inline-flex items-center gap-1 mt-1 text-xs font-medium text-primary">
-                      <Award className="w-3.5 h-3.5" />
-                      {m.points} points
-                    </span>
-                  </div>
-                </div>
-
-                {m.bio && (
-                  <p className="text-sm text-muted-foreground mt-4 line-clamp-3">{m.bio}</p>
+                <img
+                  src={m.avatar_url || AVATAR}
+                  alt={m.full_name ?? "Member"}
+                  className="w-20 h-20 rounded-full object-cover ring-2 ring-primary/10 ring-offset-2 ring-offset-card"
+                />
+                <h2 className="font-semibold text-lg mt-4 truncate max-w-full">{m.full_name}</h2>
+                {m.membership_id && (
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    ICAI ID · {m.membership_id}
+                  </p>
                 )}
 
-                <div className="flex gap-2 mt-4 pt-4 border-t">
-                  {m.phone ? (
-                    <a
-                      href={`tel:${m.phone}`}
-                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-primary text-sm font-medium hover:bg-primary/10 transition-colors"
-                    >
-                      <Phone className="w-4 h-4" />
-                      Call
-                    </a>
-                  ) : null}
-                  {m.email ? (
-                    <a
-                      href={`mailto:${m.email}`}
-                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-primary text-sm font-medium hover:bg-primary/10 transition-colors"
-                    >
-                      <Mail className="w-4 h-4" />
-                      Email
-                    </a>
-                  ) : null}
-                  {!m.phone && !m.email && (
-                    <span className="text-xs text-muted-foreground">No contact details shared</span>
+                <span className="inline-flex items-center gap-1.5 mt-3 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                  <Award className="w-3.5 h-3.5" />
+                  {m.points} points
+                </span>
+
+                {m.created_at && (
+                  <p className="text-xs text-muted-foreground mt-3">
+                    Member since {memberSince(m.created_at)}
+                  </p>
+                )}
+
+                {m.bio && (
+                  <p className="text-sm text-muted-foreground mt-3 line-clamp-2">{m.bio}</p>
+                )}
+
+                <div className="flex items-center gap-2 mt-5 w-full">
+                  {m.phone || m.email ? (
+                    <>
+                      {m.phone && (
+                        <a
+                          href={`tel:${m.phone}`}
+                          className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-full bg-muted/60 text-sm font-medium hover:bg-primary hover:text-primary-foreground transition-colors"
+                        >
+                          <Phone className="w-4 h-4" />
+                          Call
+                        </a>
+                      )}
+                      {m.email && (
+                        <a
+                          href={`mailto:${m.email}`}
+                          className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-full bg-muted/60 text-sm font-medium hover:bg-primary hover:text-primary-foreground transition-colors"
+                        >
+                          <Mail className="w-4 h-4" />
+                          Email
+                        </a>
+                      )}
+                    </>
+                  ) : (
+                    <span className="w-full text-xs text-muted-foreground py-2">
+                      No contact details shared
+                    </span>
                   )}
                 </div>
               </div>

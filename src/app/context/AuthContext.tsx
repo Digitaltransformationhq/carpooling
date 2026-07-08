@@ -136,7 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
   };
 
-  const signInWithGoogle = async (redirectPath = "/profile") => {
+  const signInWithGoogle = async (redirectPath = "/") => {
     if (!supabase) throw new Error("Supabase isn't connected.");
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
