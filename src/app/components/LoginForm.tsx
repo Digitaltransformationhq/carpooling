@@ -80,7 +80,7 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
         setNeedsConfirm(true);
         setError("Your email isn't confirmed yet. Confirm it, or resend the link below.");
       } else if (/invalid login credentials/i.test(msg)) {
-        setError("Incorrect email or password — or this email hasn't been confirmed yet.");
+        setError("Incorrect email or password.");
         setNeedsConfirm(true);
       } else {
         setError(msg);

@@ -20,6 +20,12 @@ export default defineConfig({
       workbox: {
         // SPA fallback so deep links work offline
         navigateFallback: "/index.html",
+        // ...but never for auth landing pages. A returning visitor has the
+        // previous index.html precached, which points at the previous JS
+        // bundle — and if that build predates a route, the emailed link lands
+        // on the app's own 404. These must always hit the network so they get
+        // the current build.
+        navigateFallbackDenylist: [/^\/reset-password/, /^\/login/],
       },
       manifest: {
         name: "CACommute — Carpooling",
