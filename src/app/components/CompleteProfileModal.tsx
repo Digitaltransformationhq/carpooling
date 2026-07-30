@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router";
 import { BadgeCheck, Mail, Phone, User as UserIcon, Loader2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { fetchProfile, updateProfile } from "../data/profiles";
@@ -11,6 +12,9 @@ import { fetchProfile, updateProfile } from "../data/profiles";
  */
 export function CompleteProfileModal() {
   const { user, configured, refreshProfile } = useAuth();
+  // A recovery link signs the member in before they've set their new password.
+  // This full-screen modal would otherwise cover the reset form.
+  const onResetPage = useLocation().pathname === "/reset-password";
   const [needed, setNeeded] = useState(false);
   const [form, setForm] = useState({ membership_id: "", full_name: "", phone: "" });
   const [saving, setSaving] = useState(false);
@@ -41,7 +45,7 @@ export function CompleteProfileModal() {
       .catch(() => setNeeded(false));
   }, [user, configured]);
 
-  if (!needed || !user) return null;
+  if (!needed || !user || onResetPage) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

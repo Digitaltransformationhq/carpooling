@@ -11,6 +11,7 @@ import { AdminLogin } from "./pages/AdminLogin";
 import { Profile } from "./pages/Profile";
 import { Account } from "./pages/Account";
 import { Login } from "./pages/Login";
+import { ResetPassword } from "./pages/ResetPassword";
 import { NotFound } from "./pages/NotFound";
 
 export const router = createBrowserRouter([
@@ -29,6 +30,7 @@ export const router = createBrowserRouter([
       { path: "profile", Component: Profile },
       { path: "account", Component: Account },
       { path: "login", Component: Login },
+      { path: "reset-password", Component: ResetPassword },
       { path: "*", Component: NotFound },
     ],
   },

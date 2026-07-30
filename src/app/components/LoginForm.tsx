@@ -11,9 +11,10 @@ import { useAuth } from "../context/AuthContext";
  */
 export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
   const navigate = useNavigate();
-  const { signIn, signUp, resendConfirmation, signInWithGoogle, configured } = useAuth();
+  const { signIn, signUp, resendConfirmation, sendPasswordReset, signInWithGoogle, configured } =
+    useAuth();
 
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -25,6 +26,14 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
   const [showPassword, setShowPassword] = useState(false);
 
   const isSignup = mode === "signup";
+  const isForgot = mode === "forgot";
+
+  const switchTo = (next: typeof mode) => {
+    setMode(next);
+    setError("");
+    setInfo("");
+    setNeedsConfirm(false);
+  };
 
   // On success: close the modal if we're in one, then land on the home page
   // scrolled to "Rides Leaving Soon" so users go straight to bookable rides.
@@ -40,7 +49,14 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
     setNeedsConfirm(false);
     setBusy(true);
     try {
-      if (isSignup) {
+      if (isForgot) {
+        await sendPasswordReset(email);
+        // Deliberately the same message whether or not the address exists, so
+        // the form can't be used to discover who's registered.
+        setInfo(
+          `If an account exists for ${email}, a password reset link is on its way. Check your inbox — and your spam folder.`
+        );
+      } else if (isSignup) {
         const { needsConfirmation } = await signUp(email, password, name, phone.trim());
         if (needsConfirmation) {
           setMode("signin");
@@ -112,10 +128,14 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
       <div className="flex flex-col items-center mb-6">
         <img src="/logo.png" alt="CACommute" className="w-16 h-16 rounded-xl object-cover mb-3" />
         <h1 className="text-2xl font-bold">
-          {isSignup ? "Create your account" : "Welcome back"}
+          {isForgot ? "Reset your password" : isSignup ? "Create your account" : "Welcome back"}
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          {isSignup ? "Join CACommute to book and publish rides" : "Sign in to continue"}
+          {isForgot
+            ? "We'll email you a link to set a new one"
+            : isSignup
+              ? "Join CACommute to book and publish rides"
+              : "Sign in to continue"}
         </p>
       </div>
 
@@ -137,6 +157,7 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
         </div>
       )}
 
+      {!isForgot && (
       <button
         type="button"
         onClick={handleGoogle}
@@ -163,12 +184,15 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
         </svg>
         Continue with Google
       </button>
+      )}
 
-      <div className="flex items-center gap-3 mb-4">
-        <span className="flex-1 h-px bg-border" />
-        <span className="text-xs text-muted-foreground">or</span>
-        <span className="flex-1 h-px bg-border" />
-      </div>
+      {!isForgot && (
+        <div className="flex items-center gap-3 mb-4">
+          <span className="flex-1 h-px bg-border" />
+          <span className="text-xs text-muted-foreground">or</span>
+          <span className="flex-1 h-px bg-border" />
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {isSignup && (
@@ -222,8 +246,20 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
           </div>
         </div>
 
+        {!isForgot && (
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Password</label>
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium">Password</label>
+            {!isSignup && (
+              <button
+                type="button"
+                onClick={() => switchTo("forgot")}
+                className="text-xs font-medium text-foreground underline hover:opacity-80"
+              >
+                Forgot password?
+              </button>
+            )}
+          </div>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
@@ -245,13 +281,20 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
             </button>
           </div>
         </div>
+        )}
 
         <button
           type="submit"
           disabled={busy}
           className="w-full bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60"
         >
-          {busy ? "Please wait…" : isSignup ? "Create account" : "Sign in"}
+          {busy
+            ? "Please wait…"
+            : isForgot
+              ? "Send reset link"
+              : isSignup
+                ? "Create account"
+                : "Sign in"}
         </button>
 
         {needsConfirm && !isSignup && (
@@ -267,17 +310,26 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
       </form>
 
       <p className="text-center text-sm text-muted-foreground mt-6">
-        {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
-        <button
-          type="button"
-          onClick={() => {
-            setMode(isSignup ? "signin" : "signup");
-            setError("");
-          }}
-          className="text-foreground font-semibold underline hover:opacity-80"
-        >
-          {isSignup ? "Sign in" : "Sign up"}
-        </button>
+        {isForgot ? (
+          <button
+            type="button"
+            onClick={() => switchTo("signin")}
+            className="text-foreground font-semibold underline hover:opacity-80"
+          >
+            Back to sign in
+          </button>
+        ) : (
+          <>
+            {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
+            <button
+              type="button"
+              onClick={() => switchTo(isSignup ? "signin" : "signup")}
+              className="text-foreground font-semibold underline hover:opacity-80"
+            >
+              {isSignup ? "Sign in" : "Sign up"}
+            </button>
+          </>
+        )}
       </p>
     </div>
   );

@@ -31,6 +31,8 @@ interface AuthContextValue {
     phone: string
   ) => Promise<{ needsConfirmation: boolean }>;
   resendConfirmation: (email: string) => Promise<void>;
+  sendPasswordReset: (email: string) => Promise<void>;
+  updatePassword: (password: string) => Promise<void>;
   signInWithGoogle: (redirectPath?: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -136,6 +138,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
   };
 
+  /**
+   * Emails a one-time recovery link. Supabase verifies the token on its own
+   * server and only then bounces the browser to /reset-password with a
+   * short-lived session attached — so the bare URL is useless on its own.
+   */
+  const sendPasswordReset = async (email: string) => {
+    if (!supabase) throw new Error("Supabase isn't connected.");
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) throw error;
+  };
+
+  /**
+   * Sets a new password for whoever the current session belongs to. The change
+   * is authorised server-side from the session JWT, so this can never target
+   * another member's account no matter what the browser sends.
+   */
+  const updatePassword = async (password: string) => {
+    if (!supabase) throw new Error("Supabase isn't connected.");
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) throw error;
+  };
+
   const signInWithGoogle = async (redirectPath = "/") => {
     if (!supabase) throw new Error("Supabase isn't connected.");
     const { error } = await supabase.auth.signInWithOAuth({
@@ -164,6 +190,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signUp,
         resendConfirmation,
+        sendPasswordReset,
+        updatePassword,
         signInWithGoogle,
         signOut,
       }}
