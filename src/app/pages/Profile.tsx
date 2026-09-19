@@ -6,6 +6,7 @@ import { fetchUserStats, fetchMyTrips, type UserStats, type Trip } from "../data
 import { deleteRide, markRideComplete, markRideStarted } from "../data/rides";
 import { supabase } from "../lib/supabase";
 import { formatDate } from "../lib/format";
+import { RideAlertsNudge } from "../components/RideAlerts";
 
 type Filter = "all" | "upcoming" | "completed";
 
@@ -134,6 +135,8 @@ export function Profile() {
             Publish a ride
           </Link>
         </div>
+
+        <RideAlertsNudge className="mb-6" />
 
         {/* Ride stat summary */}
         <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6">

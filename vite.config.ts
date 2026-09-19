@@ -26,6 +26,8 @@ export default defineConfig({
         // on the app's own 404. These must always hit the network so they get
         // the current build.
         navigateFallbackDenylist: [/^\/reset-password/, /^\/login/],
+        // push + notification-click handlers for ride alerts (public/push-sw.js)
+        importScripts: ["/push-sw.js"],
       },
       manifest: {
         name: "CACommute — Carpooling",

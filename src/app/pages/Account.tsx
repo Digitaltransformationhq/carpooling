@@ -9,6 +9,7 @@ import {
   type Profile as DBProfile,
 } from "../data/profiles";
 import { fetchUserStats, type UserStats } from "../data/account";
+import { RideAlertsSettings } from "../components/RideAlerts";
 
 const AVATAR = "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop";
 
@@ -218,6 +219,8 @@ export function Account() {
             completed ride you join.
           </p>
         </div>
+
+        <RideAlertsSettings />
 
         {/* Edit Profile */}
         <div className="bg-card border border-primary rounded-2xl p-6 md:p-8">

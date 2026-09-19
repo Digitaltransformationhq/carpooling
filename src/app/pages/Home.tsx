@@ -13,6 +13,7 @@ import {
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { formatDate } from "../lib/format";
+import { RideAlertsNudge } from "../components/RideAlerts";
 import { Leaf, Award, Users, BadgeCheck, Car, Gift, Search, Calendar } from "lucide-react";
 
 export function Home() {
@@ -138,6 +139,8 @@ export function Home() {
       {user && (
         <section className="py-10 md:py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <RideAlertsNudge className="mb-8" />
+
             {/* Requests waiting for the driver to accept */}
             {incoming.length > 0 && (
               <div className="mb-10">

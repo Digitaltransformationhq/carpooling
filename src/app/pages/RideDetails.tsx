@@ -21,6 +21,7 @@ import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { formatDate, formatTime } from "../lib/format";
 import { PlaceAutocomplete } from "../components/PlaceAutocomplete";
+import { RideAlertsNudge } from "../components/RideAlerts";
 import { Clock, Shield, Phone, Users, ChevronLeft, Plus, Minus, Check, X, Bike, Car, MapPin } from "lucide-react";
 
 const RideRouteMap = lazy(() => import("../components/RideRouteMap"));
@@ -398,6 +399,12 @@ export function RideDetails() {
                   <p className="text-sm text-muted-foreground text-center mb-5">
                     This is your published ride.
                   </p>
+                  {!isCompleted && (
+                    <RideAlertsNudge
+                      className="mb-5 text-left"
+                      message="Get notified the moment someone requests a seat, and 30 minutes before you leave."
+                    />
+                  )}
                   {!isCompleted && !isStarted && (
                     <button
                       onClick={handleStart}
@@ -590,6 +597,12 @@ export function RideDetails() {
                         Withdraw request
                       </button>
                     </div>
+                  )}
+                  {myPending > 0 && (
+                    <RideAlertsNudge
+                      className="mb-5"
+                      message="Get notified as soon as the driver accepts, and 30 minutes before the ride leaves."
+                    />
                   )}
 
                   {/* Confirmed booking — accepted by the driver */}

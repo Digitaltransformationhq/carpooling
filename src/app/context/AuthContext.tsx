@@ -8,6 +8,7 @@ import {
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase, isSupabaseConfigured } from "../lib/supabase";
+import { disablePush } from "../lib/push";
 
 export interface ProfileLite {
   full_name: string | null;
@@ -175,6 +176,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     if (!supabase) return;
+    // stop this device receiving the account's ride alerts (while still signed
+    // in, so the server copy can be removed too)
+    await disablePush().catch(() => {});
     await supabase.auth.signOut();
   };
 
