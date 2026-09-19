@@ -5,7 +5,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { AuthModalProvider } from "./context/AuthModalContext";
 import { backfillMissingRoutes } from "./data/rides";
 import { InstallPrompt } from "./components/InstallPrompt";
-import { syncPushSubscription } from "./lib/push";
+import { autoEnablePush } from "./lib/push";
 
 /** Once per session, fill in driving routes for the signed-in user's older
  *  rides so they can be matched along their corridor. Runs quietly. */
@@ -21,13 +21,13 @@ function RouteBackfill() {
   return null;
 }
 
-/** Keeps this device's push subscription attached to the signed-in account,
+/** Asks for / keeps ride-alert permission on every load for a signed-in user,
  *  and routes in-app when a ride alert is clicked while the app is open. */
 function PushBridge() {
   const { user } = useAuth();
   useEffect(() => {
-    if (user) syncPushSubscription().catch(() => {});
-  }, [user]);
+    if (user) return autoEnablePush();
+  }, [user?.id]);
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
     const onMessage = (e: MessageEvent) => {

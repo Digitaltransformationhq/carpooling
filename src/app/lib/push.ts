@@ -10,6 +10,9 @@ import { supabase } from "./supabase";
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined;
 const DISMISS_KEY = "cacommute:push-nudge-dismissed";
 const DISMISS_DAYS = 7;
+// set when the user switches alerts off on the Account page, so the app stops
+// asking again on every load (sign-out turns alerts off without setting it)
+const OPT_OUT_KEY = "cacommute:push-opted-out";
 
 export type PushState =
   | "loading"
@@ -49,6 +52,31 @@ function isStandalone(): boolean {
     window.matchMedia("(display-mode: standalone)").matches ||
     (navigator as unknown as { standalone?: boolean }).standalone === true
   );
+}
+
+/** Safari (incl. iOS) and Firefox only show the permission prompt from a
+ *  tap/click; Chrome/Edge also allow it on page load. */
+function promptNeedsGesture(): boolean {
+  const ua = navigator.userAgent;
+  if (isIOS() || /firefox|fxios/i.test(ua)) return true;
+  return /safari/i.test(ua) && !/chrome|chromium|crios|edg|android/i.test(ua);
+}
+
+function optedOut(): boolean {
+  try {
+    return localStorage.getItem(OPT_OUT_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function setOptedOut(value: boolean) {
+  try {
+    if (value) localStorage.setItem(OPT_OUT_KEY, "1");
+    else localStorage.removeItem(OPT_OUT_KEY);
+  } catch {
+    /* private mode — the preference just won't persist */
+  }
 }
 
 function canPush(): boolean {
@@ -130,13 +158,16 @@ export async function enablePush(): Promise<PushState> {
   sub ??= await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
 
   await saveSubscription(sub);
+  setOptedOut(false);
   setState("on");
   return "on";
 }
 
-/** Stop alerts on this device (also used on sign-out so the next person
- *  on this browser doesn't get the previous account's alerts). */
-export async function disablePush(): Promise<void> {
+/** Stop alerts on this device. `optOut` = the user chose this, so stop asking
+ *  on every load; sign-out passes nothing, so the next person on this browser
+ *  doesn't get the previous account's alerts but is still asked. */
+export async function disablePush(optOut = false): Promise<void> {
+  if (optOut) setOptedOut(true);
   const reg = canPush() ? await getRegistration() : null;
   const sub = await reg?.pushManager.getSubscription();
   if (sub) {
@@ -146,12 +177,49 @@ export async function disablePush(): Promise<void> {
   if (state === "on") setState("off");
 }
 
-/** Re-register an existing subscription with the signed-in account (endpoints
- *  can rotate; this keeps the server copy current). */
-export async function syncPushSubscription(): Promise<void> {
-  if ((await refreshPushState()) !== "on") return;
-  const sub = await (await getRegistration())?.pushManager.getSubscription();
-  if (sub) await saveSubscription(sub).catch(() => {});
+/**
+ * Runs on every app load for a signed-in user:
+ *  - alerts already on → re-save the subscription (endpoints can rotate)
+ *  - permission already granted → subscribe silently
+ *  - not decided yet → ask. Chrome/Edge show the prompt straight away;
+ *    Safari/iOS and Firefox only allow it from a tap, so there it's asked on
+ *    the first click/tap anywhere in the app.
+ * Skipped if the user turned alerts off themselves, or blocked the site
+ * (a browser never lets a site ask again after "Block").
+ * Returns a cleanup that drops the pending tap listener.
+ */
+export function autoEnablePush(): () => void {
+  let cancelled = false;
+  let removeListener = () => {};
+
+  (async () => {
+    const current = await refreshPushState();
+    if (cancelled) return;
+
+    if (current === "on") {
+      const sub = await (await getRegistration())?.pushManager.getSubscription();
+      if (sub) await saveSubscription(sub).catch(() => {});
+      return;
+    }
+    if (current !== "off" || optedOut()) return;
+
+    if (Notification.permission === "granted" || !promptNeedsGesture()) {
+      await enablePush().catch(() => {});
+      return;
+    }
+
+    const onGesture = () => {
+      removeListener();
+      enablePush().catch(() => {});
+    };
+    document.addEventListener("click", onGesture, true);
+    removeListener = () => document.removeEventListener("click", onGesture, true);
+  })().catch(() => {});
+
+  return () => {
+    cancelled = true;
+    removeListener();
+  };
 }
 
 export function dismissPushNudge() {

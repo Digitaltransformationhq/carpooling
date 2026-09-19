@@ -125,7 +125,7 @@ export function RideAlertsSettings() {
         </div>
         {(state === "on" || state === "off") && (
           <button
-            onClick={() => run(on ? disablePush : enablePush)}
+            onClick={() => run(on ? () => disablePush(true) : enablePush)}
             disabled={busy}
             className={`shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-60 ${
               on
