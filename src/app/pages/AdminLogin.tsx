@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, Navigate } from "react-router";
 import { ShieldCheck, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
@@ -7,13 +7,28 @@ import { fetchProfile } from "../data/profiles";
 
 export function AdminLogin() {
   const navigate = useNavigate();
-  const { signIn, signInWithGoogle, signOut, configured } = useAuth();
+  const { signIn, signInWithGoogle, signOut, configured, profile, loading } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Wait for the session before deciding — otherwise an admin who is already
+  // signed in sees the sign-in form flash before being redirected.
+  if (configured && loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-muted-foreground">
+        Loading…
+      </div>
+    );
+  }
+
+  // Already signed in as an admin: there is nothing to sign in to. Asking
+  // again is worse than pointless — signing in here with a non-admin account
+  // would sign the current admin straight back out (see verifyAdmin below).
+  if (profile?.is_admin) return <Navigate to="/admin" replace />;
 
   /** After auth, allow through only if the account is an admin. */
   const verifyAdmin = async () => {

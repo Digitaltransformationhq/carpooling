@@ -195,7 +195,7 @@ export function Home() {
                   .
                 </div>
               ) : (
-                <div className="grid sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {upcoming.map((t) => (
                     <Link
                       key={t.key}
@@ -211,7 +211,7 @@ export function Home() {
                           {formatDate(t.date)}
                         </span>
                       </div>
-                      <p className="font-medium truncate">
+                      <p className="font-medium truncate" title={`${t.from} → ${t.to}`}>
                         {t.from} → {t.to}
                       </p>
                       <p className="text-xs text-muted-foreground truncate mt-0.5">{t.detail}</p>

@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router";
-import { Search, Users, Phone, Mail, Award, Loader2 } from "lucide-react";
+import { Search, Users, Phone, Mail, Award, Loader2, EyeOff, Undo2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { searchProfiles } from "../data/profiles";
+import { searchProfiles, setMemberVisibility } from "../data/profiles";
 import type { DirectoryProfile } from "../data/profiles";
-
-const AVATAR = "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop";
+import { Avatar } from "../components/Avatar";
 
 function memberSince(iso: string | null): string {
   if (!iso) return "";
@@ -16,23 +15,55 @@ function memberSince(iso: string | null): string {
 }
 
 export function PeerConnect() {
-  const { user, loading, configured } = useAuth();
+  const { user, loading, configured, profile } = useAuth();
+  const isAdmin = Boolean(profile?.is_admin);
   const [query, setQuery] = useState("");
   const [members, setMembers] = useState<DirectoryProfile[]>([]);
   const [searching, setSearching] = useState(true);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
-  // Debounced directory search — re-runs as the query changes.
+  // Debounced directory search — re-runs as the query changes. Admins also
+  // see delisted members (dimmed, with a Restore button) so a removal can be
+  // undone; everyone else only ever gets the visible ones.
   useEffect(() => {
     if (configured && !user) return;
     setSearching(true);
     const handle = setTimeout(() => {
-      searchProfiles(query, user?.id)
+      searchProfiles(query, user?.id, isAdmin)
         .then(setMembers)
         .catch(() => setMembers([]))
         .finally(() => setSearching(false));
     }, 250);
     return () => clearTimeout(handle);
-  }, [query, user, configured]);
+  }, [query, user, configured, isAdmin]);
+
+  /** Delist a member from the directory, or put them back. */
+  const toggleVisibility = async (m: DirectoryProfile) => {
+    const hide = !m.directory_hidden;
+    const who = m.full_name || "this member";
+    if (
+      hide &&
+      !window.confirm(
+        `Remove ${who} from Peer Connect?\n\n` +
+          "They stay a member — their account, rides and points are untouched — " +
+          "they just stop appearing in the directory. You can restore them here."
+      )
+    ) {
+      return;
+    }
+    setBusyId(m.id);
+    try {
+      await setMemberVisibility(m.id, hide);
+      setMembers((list) =>
+        // Keep the row in place so the admin can immediately undo.
+        list.map((x) => (x.id === m.id ? { ...x, directory_hidden: hide } : x))
+      );
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Could not update the member");
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   if (configured && loading) {
     return (
@@ -91,14 +122,29 @@ export function PeerConnect() {
             {members.map((m) => (
               <div
                 key={m.id}
-                className="group bg-card border border-border/60 rounded-2xl p-6 flex flex-col items-center text-center transition-all hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-0.5"
+                className={`group bg-card border rounded-2xl p-6 flex flex-col items-center text-center transition-all hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-0.5 ${
+                  m.directory_hidden
+                    ? "border-dashed border-border opacity-60"
+                    : "border-border/60"
+                }`}
               >
-                <img
-                  src={m.avatar_url || AVATAR}
-                  alt={m.full_name ?? "Member"}
-                  className="w-20 h-20 rounded-full object-cover ring-2 ring-primary/10 ring-offset-2 ring-offset-card"
+                {m.directory_hidden && (
+                  <span className="inline-flex items-center gap-1.5 mb-3 px-2.5 py-1 rounded-full bg-muted text-muted-foreground text-xs font-medium">
+                    <EyeOff className="w-3.5 h-3.5" />
+                    Removed from directory
+                  </span>
+                )}
+                <Avatar
+                  src={m.avatar_url}
+                  name={m.full_name}
+                  className="w-20 h-20 ring-2 ring-primary/10 ring-offset-2 ring-offset-card"
                 />
-                <h2 className="font-semibold text-lg mt-4 truncate max-w-full">{m.full_name}</h2>
+                <h2
+                  className="font-semibold text-lg mt-4 truncate max-w-full"
+                  title={m.full_name ?? undefined}
+                >
+                  {m.full_name}
+                </h2>
                 {m.membership_id && (
                   <p className="text-xs text-muted-foreground mt-0.5">
                     ICAI ID · {m.membership_id}
@@ -117,7 +163,9 @@ export function PeerConnect() {
                 )}
 
                 {m.bio && (
-                  <p className="text-sm text-muted-foreground mt-3 line-clamp-2">{m.bio}</p>
+                  <p className="text-sm text-muted-foreground mt-3 line-clamp-2 break-words max-w-full">
+                    {m.bio}
+                  </p>
                 )}
 
                 <div className="flex items-center gap-2 mt-5 w-full">
@@ -148,6 +196,27 @@ export function PeerConnect() {
                     </span>
                   )}
                 </div>
+
+                {isAdmin && (
+                  <button
+                    onClick={() => toggleVisibility(m)}
+                    disabled={busyId === m.id}
+                    className={`mt-3 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium transition-colors disabled:opacity-60 ${
+                      m.directory_hidden
+                        ? "border border-border hover:bg-accent"
+                        : "text-destructive hover:bg-destructive/10"
+                    }`}
+                  >
+                    {busyId === m.id ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : m.directory_hidden ? (
+                      <Undo2 className="w-3.5 h-3.5" />
+                    ) : (
+                      <EyeOff className="w-3.5 h-3.5" />
+                    )}
+                    {m.directory_hidden ? "Restore to directory" : "Remove from directory"}
+                  </button>
+                )}
               </div>
             ))}
           </div>

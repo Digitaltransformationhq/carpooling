@@ -1,10 +1,17 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router";
-import { CalendarPlus, Trash2, Loader2, ShieldAlert, Clock, MapPin } from "lucide-react";
+import { CalendarPlus, Trash2, Loader2, ShieldAlert, Clock, MapPin, Pencil, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { fetchProfile } from "../data/profiles";
-import { fetchAllEvents, createEvent, deleteEvent, type EventItem } from "../data/events";
+import {
+  fetchAllEvents,
+  createEvent,
+  updateEvent,
+  deleteEvent,
+  type EventItem,
+} from "../data/events";
 import { PlaceAutocomplete } from "../components/PlaceAutocomplete";
+import { AdminRides } from "../components/AdminRides";
 
 function todayLocal(): string {
   const d = new Date();
@@ -30,8 +37,11 @@ export function Admin() {
   const [checking, setChecking] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  const [tab, setTab] = useState<"events" | "rides">("events");
   const [events, setEvents] = useState<EventItem[]>([]);
   const [form, setForm] = useState(EMPTY);
+  // null = the form creates a new event; an id = it's editing that one.
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
 
@@ -82,32 +92,68 @@ export function Admin() {
     }
     setSaving(true);
     try {
-      await createEvent({
+      const payload = {
         title: form.title.trim(),
         date: form.date,
         time: form.time.trim(),
         location: form.location.trim(),
         description: form.description.trim(),
-      });
+      };
+      if (editingId) {
+        await updateEvent(editingId, payload);
+        setMsg("Event updated!");
+      } else {
+        await createEvent(payload);
+        setMsg("Event published!");
+      }
       setForm(EMPTY);
-      setMsg("Event published!");
+      setEditingId(null);
       loadEvents();
     } catch (err) {
-      setMsg(err instanceof Error ? err.message : "Could not publish event");
+      setMsg(
+        err instanceof Error
+          ? err.message
+          : editingId
+            ? "Could not update event"
+            : "Could not publish event"
+      );
     } finally {
       setSaving(false);
     }
+  };
+
+  /** Load an event into the form for editing. */
+  const startEdit = (e: EventItem) => {
+    setEditingId(e.id);
+    setMsg("");
+    setForm({
+      title: e.title,
+      date: e.date,
+      time: e.time ?? "",
+      location: e.location ?? "",
+      description: e.description ?? "",
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setForm(EMPTY);
+    setMsg("");
   };
 
   const handleDelete = async (id: string) => {
     if (!window.confirm("Delete this event?")) return;
     try {
       await deleteEvent(id);
+      if (editingId === id) cancelEdit(); // don't leave the form editing a gone event
       loadEvents();
     } catch (err) {
       alert(err instanceof Error ? err.message : "Could not delete event");
     }
   };
+
+  const isSuccess = msg === "Event published!" || msg === "Event updated!";
 
   const todayStr = todayLocal();
 
@@ -118,23 +164,61 @@ export function Admin() {
           <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-full">
             <CalendarPlus className="w-6 h-6 text-primary" />
           </div>
-          <div>
-            <h1 className="text-3xl font-bold">Admin · Events</h1>
+          <div className="min-w-0">
+            <h1 className="text-3xl font-bold">Admin</h1>
             <p className="text-muted-foreground">
-              Publish forthcoming events — they appear on the Forthcoming Events page and date
-              pickers.
+              {tab === "events"
+                ? "Publish forthcoming events — they appear on the Forthcoming Events page and date pickers."
+                : "Moderate published rides and see who has booked a seat."}
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6">
+        {/* Section switcher */}
+        <div className="inline-flex items-center gap-1 bg-muted/60 border border-border rounded-full p-1 mb-6">
+          {([
+            { key: "events", label: "Events" },
+            { key: "rides", label: "Rides" },
+          ] as const).map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                tab === t.key
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {tab === "rides" ? (
+          <AdminRides />
+        ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-[380px_minmax(0,1fr)] gap-6">
           {/* Create form */}
           <div className="bg-card border border-primary rounded-xl p-6 h-fit">
-            <h2 className="text-lg font-semibold mb-4">Publish an event</h2>
+            <div className="flex items-center justify-between gap-2 mb-4">
+              <h2 className="text-lg font-semibold">
+                {editingId ? "Edit event" : "Publish an event"}
+              </h2>
+              {editingId && (
+                <button
+                  type="button"
+                  onClick={cancelEdit}
+                  className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+                >
+                  <X className="w-3.5 h-3.5" />
+                  Cancel
+                </button>
+              )}
+            </div>
             {msg && (
               <div
                 className={`mb-4 text-sm rounded-lg p-3 ${
-                  msg === "Event published!"
+                  isSuccess
                     ? "bg-green-50 border border-green-200 text-green-700"
                     : "bg-red-50 border border-red-200 text-red-700"
                 }`}
@@ -160,7 +244,9 @@ export function Admin() {
                   <input
                     type="date"
                     value={form.date}
-                    min={todayStr}
+                    // Editing a past event must not be blocked by the
+                    // "no events in the past" rule that applies to new ones.
+                    min={editingId && form.date < todayStr ? form.date : todayStr}
                     onChange={(e) => setForm({ ...form, date: e.target.value })}
                     className="w-full px-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     required
@@ -203,7 +289,13 @@ export function Admin() {
                 className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
               >
                 {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-                {saving ? "Publishing…" : "Publish event"}
+                {saving
+                  ? editingId
+                    ? "Saving…"
+                    : "Publishing…"
+                  : editingId
+                    ? "Save changes"
+                    : "Publish event"}
               </button>
             </form>
           </div>
@@ -223,12 +315,16 @@ export function Admin() {
                     <div
                       key={e.id}
                       className={`bg-card border rounded-xl p-4 flex items-start justify-between gap-3 ${
-                        isPast ? "border-border opacity-60" : "border-primary"
+                        editingId === e.id
+                          ? "border-primary ring-2 ring-primary/30"
+                          : isPast
+                            ? "border-border opacity-60"
+                            : "border-primary"
                       }`}
                     >
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-semibold">{e.title}</h3>
+                          <h3 className="font-semibold break-words">{e.title}</h3>
                           {isPast && (
                             <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
                               Past
@@ -254,13 +350,24 @@ export function Admin() {
                         </div>
                         {e.description && <p className="text-sm mt-2">{e.description}</p>}
                       </div>
-                      <button
-                        onClick={() => handleDelete(e.id)}
-                        aria-label="Delete event"
-                        className="shrink-0 p-2 rounded-lg text-destructive hover:bg-destructive/10 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={() => startEdit(e)}
+                          aria-label={`Edit ${e.title}`}
+                          title="Edit event"
+                          className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(e.id)}
+                          aria-label={`Delete ${e.title}`}
+                          title="Delete event"
+                          className="p-2 rounded-lg text-destructive hover:bg-destructive/10 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
@@ -268,6 +375,7 @@ export function Admin() {
             )}
           </div>
         </div>
+        )}
       </div>
     </div>
   );

@@ -237,8 +237,11 @@ export async function createRide(input: NewRideInput): Promise<Ride> {
   const row = {
     user_id: me.id,
     driver_name: me.name,
-    driver_avatar:
-      "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop",
+    // The rides_pin_driver trigger overwrites this from the author's profile,
+    // but only when they have an avatar_url — with none it keeps whatever we
+    // send. Send empty, so a driver without a photo gets the silhouette rather
+    // than a stock portrait of someone else standing in as them.
+    driver_avatar: "",
     driver_rating: 5.0,
     driver_review_count: 0,
     from_location: input.from,

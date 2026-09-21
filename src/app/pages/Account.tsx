@@ -10,8 +10,7 @@ import {
 } from "../data/profiles";
 import { fetchUserStats, type UserStats } from "../data/account";
 import { RideAlertsSettings } from "../components/RideAlerts";
-
-const AVATAR = "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop";
+import { Avatar } from "../components/Avatar";
 
 export function Account() {
   const navigate = useNavigate();
@@ -33,7 +32,7 @@ export function Account() {
     ridesAsPassenger: 0,
     points: 0,
   });
-  const [avatarUrl, setAvatarUrl] = useState(AVATAR);
+  const [avatarUrl, setAvatarUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -150,11 +149,7 @@ export function Account() {
         <div className="bg-card border border-primary rounded-2xl p-6 md:p-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
             <div className="relative w-24 h-24 shrink-0">
-              <img
-                src={avatarUrl}
-                alt={displayName}
-                className="w-24 h-24 rounded-full object-cover"
-              />
+              <Avatar src={avatarUrl} name={displayName} className="w-24 h-24" />
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}

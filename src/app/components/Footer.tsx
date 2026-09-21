@@ -1,7 +1,11 @@
 import { Link } from "react-router";
 import { Facebook, Twitter, Instagram } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 export function Footer() {
+  const { profile } = useAuth();
+  const isAdmin = Boolean(profile?.is_admin);
+
   return (
     <footer className="bg-card border-t border-border text-foreground mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -82,8 +86,12 @@ export function Footer() {
         <div className="border-t border-border mt-8 pt-8 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-sm text-muted-foreground">
           <p>&copy; 2026 CACommute. All rights reserved.</p>
           <span className="hidden sm:inline">·</span>
-          <Link to="/admin/login" className="hover:text-foreground transition-colors">
-            Admin Login
+          {/* Already an admin? Offer the panel, not another sign-in. */}
+          <Link
+            to={isAdmin ? "/admin" : "/admin/login"}
+            className="hover:text-foreground transition-colors"
+          >
+            {isAdmin ? "Admin Panel" : "Admin Login"}
           </Link>
         </div>
       </div>

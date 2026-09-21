@@ -10,6 +10,8 @@ export interface Profile {
   avatar_url: string | null;
   points: number;
   is_admin: boolean;
+  /** Delisted from Peer Connect by an admin. Set only via set_member_visibility. */
+  directory_hidden: boolean;
   created_at: string;
 }
 
@@ -26,16 +28,23 @@ export type DirectoryProfile = Omit<Profile, "is_admin">;
 
 // Only the columns the directory actually displays (no is_admin — don't leak
 // who the admins are to every signed-in member).
-const DIRECTORY_COLUMNS = "id, full_name, email, phone, membership_id, bio, avatar_url, points, created_at";
+const DIRECTORY_COLUMNS =
+  "id, full_name, email, phone, membership_id, bio, avatar_url, points, created_at, directory_hidden";
 
 /**
  * Search the member directory (Peer Connect). Empty query returns recent
  * members; a query matches on name (case-insensitive). Skips `excludeId`
  * (typically the current user) and rows without a name.
  */
-export async function searchProfiles(query = "", excludeId?: string): Promise<DirectoryProfile[]> {
+export async function searchProfiles(
+  query = "",
+  excludeId?: string,
+  /** Admins pass true so they can see — and restore — delisted members. */
+  includeHidden = false
+): Promise<DirectoryProfile[]> {
   if (!supabase) return [];
   let q = supabase.from("profiles").select(DIRECTORY_COLUMNS).not("full_name", "is", null);
+  if (!includeHidden) q = q.eq("directory_hidden", false);
   // Strip characters that are meaningful in PostgREST filter syntax so the
   // search term can't break out of / inject into the .or() expression.
   const term = query.trim().replace(/[,()*%:\\]/g, "").slice(0, 80);
@@ -46,6 +55,20 @@ export async function searchProfiles(query = "", excludeId?: string): Promise<Di
   let list = (data as unknown as DirectoryProfile[]) ?? [];
   if (excludeId) list = list.filter((p) => p.id !== excludeId);
   return list;
+}
+
+/**
+ * Delist a member from Peer Connect, or restore them (admin only — the RPC
+ * re-checks is_admin server-side; see supabase/directory_visibility.sql).
+ * Nothing else about the member changes.
+ */
+export async function setMemberVisibility(userId: string, hidden: boolean): Promise<void> {
+  if (!supabase) throw new Error("Supabase isn't connected.");
+  const { error } = await supabase.rpc("set_member_visibility", {
+    p_user_id: userId,
+    p_hidden: hidden,
+  });
+  if (error) throw error;
 }
 
 export async function fetchProfile(userId: string): Promise<Profile | null> {

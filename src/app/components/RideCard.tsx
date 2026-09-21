@@ -2,6 +2,7 @@ import { Link } from "react-router";
 import { Clock, Users, Bike, Car, Route } from "lucide-react";
 import { Ride } from "../data/mockData";
 import { formatDate, formatTime } from "../lib/format";
+import { Avatar } from "./Avatar";
 
 interface RideCardProps {
   ride: Ride;
@@ -17,11 +18,7 @@ export function RideCard({ ride }: RideCardProps) {
       {/* Driver + vehicle */}
       <div className="flex items-center justify-between gap-4 mb-4">
         <div className="flex items-center gap-3 min-w-0">
-          <img
-            src={ride.driver.avatar}
-            alt={ride.driver.name}
-            className="w-12 h-12 rounded-full object-cover shrink-0"
-          />
+          <Avatar src={ride.driver.avatar} name={ride.driver.name} className="w-12 h-12" />
           <div className="min-w-0">
             <p className="font-semibold truncate">{ride.driver.name}</p>
             <p className="text-sm text-muted-foreground">Driver</p>

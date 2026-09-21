@@ -246,22 +246,38 @@ export function Profile() {
                     </span>
                   </div>
 
-                  {/* Route */}
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="font-semibold truncate">{trip.from}</span>
-                      <span className="w-5 h-5 rounded-[4px] bg-primary flex items-center justify-center shrink-0">
-                        <span className="w-2 h-2 rounded-[1px] bg-white"></span>
+                  {/* Route — names stack above the connector on mobile (same
+                      treatment as RideCard) so long addresses stay readable
+                      instead of being truncated to a few characters each. */}
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
+                    <div className="flex items-center justify-between gap-3 sm:contents">
+                      <span
+                        title={trip.from}
+                        className="font-semibold truncate min-w-0 flex-1 sm:flex-none sm:max-w-[40%] sm:order-1"
+                      >
+                        {trip.from}
+                      </span>
+                      <span
+                        title={trip.to}
+                        className="font-semibold truncate min-w-0 flex-1 text-right sm:text-left sm:flex-none sm:max-w-[40%] sm:order-5"
+                      >
+                        {trip.to}
                       </span>
                     </div>
-                    <div
-                      className={`flex-1 h-[3px] ${isCompleted ? "route-still" : "route-flow"}`}
-                      aria-hidden="true"
-                    ></div>
-                    <div className="flex items-center gap-2 min-w-0">
+
+                    <div className="flex items-center gap-2 sm:contents">
+                      <span className="w-5 h-5 rounded-[4px] bg-primary flex items-center justify-center shrink-0 sm:order-2">
+                        <span className="w-2 h-2 rounded-[1px] bg-white"></span>
+                      </span>
+                      <div
+                        className={`h-[3px] flex-1 sm:order-3 ${
+                          isCompleted ? "route-still" : "route-flow"
+                        }`}
+                        aria-hidden="true"
+                      ></div>
                       <svg
                         viewBox="-2 -2 18 20"
-                        className="w-4 h-4 text-primary shrink-0"
+                        className="w-4 h-4 text-primary shrink-0 sm:order-4"
                         fill="currentColor"
                         stroke="currentColor"
                         strokeWidth="3"
@@ -270,7 +286,6 @@ export function Profile() {
                       >
                         <path d="M0 0L14 8L0 16Z" />
                       </svg>
-                      <span className="font-semibold truncate">{trip.to}</span>
                     </div>
                   </div>
 

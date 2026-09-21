@@ -73,6 +73,22 @@ export async function createEvent(input: NewEvent): Promise<void> {
   if (error) throw error;
 }
 
+/** Update an existing event (admin only — enforced by RLS). */
+export async function updateEvent(id: string, input: NewEvent): Promise<void> {
+  if (!supabase) throw new Error("Supabase isn't connected.");
+  const { error } = await supabase
+    .from("events")
+    .update({
+      title: input.title,
+      event_date: input.date,
+      event_time: input.time || null,
+      location: input.location || null,
+      description: input.description || null,
+    })
+    .eq("id", id);
+  if (error) throw error;
+}
+
 /** Delete an event (admin only — enforced by RLS). */
 export async function deleteEvent(id: string): Promise<void> {
   if (!supabase) throw new Error("Supabase isn't connected.");

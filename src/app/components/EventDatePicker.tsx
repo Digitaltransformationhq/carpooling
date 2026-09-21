@@ -120,7 +120,7 @@ export function EventDatePicker({
       </button>
 
       {open && (
-        <div className="absolute z-50 mt-1 w-72 bg-card border border-border rounded-lg shadow-lg p-3">
+        <div className="absolute z-50 mt-1 w-72 max-w-[calc(100vw-4rem)] bg-card border border-border rounded-lg shadow-lg p-3">
           {/* Month nav */}
           <div className="flex items-center justify-between mb-2">
             <button

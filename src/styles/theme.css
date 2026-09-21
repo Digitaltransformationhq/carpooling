@@ -132,6 +132,18 @@
     background-attachment: fixed;
   }
 
+  /* Backstop against sideways page scroll. One element that can't shrink (a
+     long address in a nowrap/truncate line, say) otherwise widens the whole
+     document: every `mx-auto` section then centres on that wider box, so the
+     hero and navbar sit left of centre with a white gutter beside them.
+     `clip` rather than `hidden` because it doesn't create a scroll container,
+     so `position: sticky/fixed` and scrollIntoView keep working. This is a
+     safety net — overflow still gets fixed at the component that causes it. */
+  html,
+  body {
+    overflow-x: clip;
+  }
+
   html {
     font-size: var(--font-size);
     font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;

@@ -3,6 +3,7 @@ import { User, Menu, X, Award } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useAuthModal } from "../context/AuthModalContext";
+import { Avatar } from "./Avatar";
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `px-3.5 py-2 rounded-full text-sm font-medium transition-colors ${
@@ -69,17 +70,7 @@ export function Header() {
                     title="Your account"
                     className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border border-transparent hover:border-border hover:bg-accent transition-colors"
                   >
-                    {profile?.avatar_url ? (
-                      <img
-                        src={profile.avatar_url}
-                        alt={displayName}
-                        className="w-8 h-8 rounded-full object-cover"
-                      />
-                    ) : (
-                      <span className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center">
-                        <User className="w-4 h-4" />
-                      </span>
-                    )}
+                    <Avatar src={profile?.avatar_url} name={displayName} className="w-8 h-8" />
                     <span className="max-w-[8rem] truncate text-sm font-medium">{displayName}</span>
                   </button>
                 </>

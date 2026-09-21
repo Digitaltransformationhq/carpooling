@@ -22,6 +22,7 @@ import { useAuth } from "../context/AuthContext";
 import { formatDate, formatTime } from "../lib/format";
 import { PlaceAutocomplete } from "../components/PlaceAutocomplete";
 import { RideAlertsNudge } from "../components/RideAlerts";
+import { Avatar } from "../components/Avatar";
 import { Clock, Shield, Phone, Users, ChevronLeft, Plus, Minus, Check, X, Bike, Car, MapPin } from "lucide-react";
 
 const RideRouteMap = lazy(() => import("../components/RideRouteMap"));
@@ -326,8 +327,12 @@ export function RideDetails() {
                   driver + rider views, which share this header). */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="font-semibold text-lg truncate min-w-0">{ride.from}</p>
-                  <p className="font-semibold text-lg truncate min-w-0 text-right">{ride.to}</p>
+                  <p className="font-semibold text-lg truncate min-w-0" title={ride.from}>
+                    {ride.from}
+                  </p>
+                  <p className="font-semibold text-lg truncate min-w-0 text-right" title={ride.to}>
+                    {ride.to}
+                  </p>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -805,11 +810,7 @@ export function RideDetails() {
             <h2 className="font-semibold text-lg mb-4">About the driver</h2>
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-4 min-w-0">
-                <img
-                  src={ride.driver.avatar}
-                  alt={ride.driver.name}
-                  className="w-16 h-16 rounded-full object-cover"
-                />
+                <Avatar src={ride.driver.avatar} name={ride.driver.name} className="w-16 h-16" />
                 <h3 className="font-semibold text-lg truncate">{ride.driver.name}</h3>
               </div>
               <a
