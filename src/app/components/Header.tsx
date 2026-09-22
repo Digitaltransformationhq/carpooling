@@ -32,7 +32,14 @@ export function Header() {
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2.5 shrink-0">
               <img src="/logo.png" alt="CACommute" className="w-8 h-8 rounded-lg object-cover" />
-              <span className="font-bold text-lg tracking-tight hidden sm:block">CACommute</span>
+              {/* On a phone the bar was a logo and a hamburger with a wide gap
+                  between them, so the name is centred to fill it: taken out of
+                  flow below md (the logo stays left, the menu button right) and
+                  back beside the logo from md up, where the nav owns the
+                  centre. Still inside the link, so tapping it goes home. */}
+              <span className="font-bold text-base sm:text-lg tracking-tight max-md:absolute max-md:left-1/2 max-md:-translate-x-1/2">
+                CACommute
+              </span>
             </Link>
 
             {/* Desktop Navigation */}
