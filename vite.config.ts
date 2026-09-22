@@ -25,7 +25,11 @@ export default defineConfig({
         // bundle — and if that build predates a route, the emailed link lands
         // on the app's own 404. These must always hit the network so they get
         // the current build.
-        navigateFallbackDenylist: [/^\/reset-password/, /^\/login/],
+        // /brochure.pdf is the QR target printed on outside material, so it
+        // must never be answered with the app shell. Without this, a returning
+        // visitor (who already has the service worker) navigating to the PDF
+        // gets index.html instead of a download.
+        navigateFallbackDenylist: [/^\/reset-password/, /^\/login/, /^\/brochure/],
         // push + notification-click handlers for ride alerts (public/push-sw.js)
         importScripts: ["/push-sw.js"],
       },

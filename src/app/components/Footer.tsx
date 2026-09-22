@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { Facebook, Twitter, Instagram } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 export function Footer() {
@@ -9,9 +9,11 @@ export function Footer() {
   return (
     <footer className="bg-card border-t border-border text-foreground mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Three columns since the placeholder About links were dropped; the
+            brand takes the extra width rather than leaving a gap. */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
-          <div className="space-y-4">
+          <div className="space-y-4 md:col-span-2">
             <div className="flex items-center gap-2">
               <img src="/logo.png" alt="CACommute" className="w-10 h-10 rounded-lg object-cover" />
               <span className="font-semibold text-xl">CACommute</span>
@@ -44,42 +46,24 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* About */}
+          {/* Connect */}
           <div>
-            <h3 className="font-semibold mb-4">About</h3>
+            <h3 className="font-semibold mb-4">Connect</h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-muted-foreground hover:text-foreground text-sm">
-                  How it Works
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-muted-foreground hover:text-foreground text-sm">
-                  Safety
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-muted-foreground hover:text-foreground text-sm">
-                  Trust & Safety
+                {/* Leaves the app, so it opens in a new tab. rel=noreferrer
+                    also stops the new page reaching back via window.opener. */}
+                <a
+                  href="https://baroda-icai.org/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground text-sm transition-colors"
+                >
+                  Baroda Branch of ICAI
+                  <ExternalLink className="w-3.5 h-3.5 shrink-0" />
                 </a>
               </li>
             </ul>
-          </div>
-
-          {/* Social */}
-          <div>
-            <h3 className="font-semibold mb-4">Connect</h3>
-            <div className="flex gap-4">
-              <a href="#" className="text-muted-foreground hover:text-foreground">
-                <Facebook className="w-5 h-5" />
-              </a>
-              <a href="#" className="text-muted-foreground hover:text-foreground">
-                <Twitter className="w-5 h-5" />
-              </a>
-              <a href="#" className="text-muted-foreground hover:text-foreground">
-                <Instagram className="w-5 h-5" />
-              </a>
-            </div>
           </div>
         </div>
 

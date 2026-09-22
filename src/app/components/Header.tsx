@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useAuthModal } from "../context/AuthModalContext";
 import { Avatar } from "./Avatar";
+import { btn } from "../lib/ui";
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `px-3.5 py-2 rounded-full text-sm font-medium transition-colors ${
@@ -75,10 +76,7 @@ export function Header() {
                   </button>
                 </>
               ) : (
-                <button
-                  onClick={openLogin}
-                  className="flex items-center gap-2 px-5 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm shadow-primary/30"
-                >
+                <button onClick={openLogin} className={btn("primary", "sm")}>
                   <User className="w-4 h-4" />
                   <span>Log in</span>
                 </button>
@@ -151,8 +149,9 @@ export function Header() {
                     setMobileMenuOpen(false);
                     openLogin();
                   }}
-                  className="block w-full text-left px-4 py-2.5 text-foreground font-medium hover:bg-accent rounded-xl transition-colors"
+                  className={`${btn("primary")} mt-1 w-full`}
                 >
+                  <User className="w-4 h-4" />
                   Log in
                 </button>
               )}
