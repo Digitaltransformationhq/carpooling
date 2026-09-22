@@ -4,6 +4,7 @@ import { AlertTriangle, CheckCircle2, Eye, EyeOff, Loader2, Lock } from "lucide-
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { useAuthModal } from "../context/AuthModalContext";
+import { btn } from "../lib/ui";
 
 /**
  * What the browser arrived with, captured at module load: supabase-js strips
@@ -155,7 +156,7 @@ export function ResetPassword() {
             <button
               type="button"
               onClick={goSignIn}
-              className="w-full mt-4 bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors"
+              className={`${btn("primary", "lg")} w-full mt-4`}
             >
               Back to sign in
             </button>
@@ -171,7 +172,7 @@ export function ResetPassword() {
             <button
               type="button"
               onClick={goSignIn}
-              className="w-full mt-4 bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors"
+              className={`${btn("primary", "lg")} w-full mt-4`}
             >
               Sign in
             </button>
@@ -233,7 +234,7 @@ export function ResetPassword() {
               <button
                 type="submit"
                 disabled={busy || !configured}
-                className="w-full bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                className={`${btn("primary", "lg")} w-full`}
               >
                 {busy && <Loader2 className="w-4 h-4 animate-spin" />}
                 {busy ? "Updating…" : "Update password"}

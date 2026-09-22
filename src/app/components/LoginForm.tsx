@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Mail, Lock, User as UserIcon, Phone, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { btn } from "../lib/ui";
 
 /**
  * The sign-in / sign-up card. Rendered both as a full page (`/login`) and
@@ -162,7 +163,7 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
         type="button"
         onClick={handleGoogle}
         disabled={busy || !configured}
-        className="w-full flex items-center justify-center gap-3 border border-border rounded-lg py-2.5 font-medium hover:bg-accent transition-colors disabled:opacity-60 mb-4"
+        className={`${btn("secondary")} w-full mb-4`}
       >
         <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
           <path
@@ -286,7 +287,7 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
         <button
           type="submit"
           disabled={busy}
-          className="w-full bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60"
+          className={`${btn("primary", "lg")} w-full`}
         >
           {busy
             ? "Please wait…"

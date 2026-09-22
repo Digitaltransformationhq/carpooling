@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router";
-import { Search, Users, Phone, Mail, Award, Loader2, EyeOff, Undo2 } from "lucide-react";
+import { Search, Phone, Mail, Award, Loader2, EyeOff, Undo2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { searchProfiles, setMemberVisibility } from "../data/profiles";
 import type { DirectoryProfile } from "../data/profiles";
 import { Avatar } from "../components/Avatar";
+import { EmptyState, MemberPreview } from "../components/EmptyState";
+import { btn } from "../lib/ui";
 
 function memberSince(iso: string | null): string {
   if (!iso) return "";
@@ -106,118 +108,135 @@ export function PeerConnect() {
             Searching members…
           </div>
         ) : members.length === 0 ? (
-          <div className="bg-card border border-dashed border-border rounded-2xl p-12 text-center">
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-primary/10 rounded-full mb-4">
-              <Users className="w-7 h-7 text-primary" />
-            </div>
-            <p className="font-semibold text-lg mb-1">No members found</p>
-            <p className="text-muted-foreground">
-              {query.trim()
-                ? `No CA matches "${query.trim()}". Try a different name.`
-                : "No other members are registered yet."}
-            </p>
-          </div>
+          <EmptyState
+            title={query.trim() ? "No matches" : "No members yet"}
+            body={
+              query.trim()
+                ? `Nothing matches "${query.trim()}". Try a different name or membership ID.`
+                : "You're early. As fellow CAs join, they'll be listed here to call or email."
+            }
+            preview={<MemberPreview />}
+            actions={
+              query.trim() ? (
+                <button onClick={() => setQuery("")} className={btn("secondary")}>
+                  Clear search
+                </button>
+              ) : undefined
+            }
+          />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {members.map((m) => (
-              <div
+              <article
                 key={m.id}
-                className={`group bg-card border rounded-2xl p-6 flex flex-col items-center text-center transition-all hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-0.5 ${
+                className={`group relative flex h-full flex-col rounded-2xl border bg-card p-5 transition-all duration-200 ${
                   m.directory_hidden
                     ? "border-dashed border-border opacity-60"
-                    : "border-border/60"
+                    : "border-border/60 hover:border-primary/40 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5"
                 }`}
               >
+                {/* Points sit in the corner instead of interrupting the column. */}
+                <span
+                  title="Reward points"
+                  className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary"
+                >
+                  <Award className="w-3 h-3" />
+                  {m.points}
+                </span>
+
                 {m.directory_hidden && (
-                  <span className="inline-flex items-center gap-1.5 mb-3 px-2.5 py-1 rounded-full bg-muted text-muted-foreground text-xs font-medium">
-                    <EyeOff className="w-3.5 h-3.5" />
+                  <span className="mb-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+                    <EyeOff className="w-3 h-3" />
                     Removed from directory
                   </span>
                 )}
-                <Avatar
-                  src={m.avatar_url}
-                  name={m.full_name}
-                  className="w-20 h-20 ring-2 ring-primary/10 ring-offset-2 ring-offset-card"
-                />
-                <h2
-                  className="font-semibold text-lg mt-4 truncate max-w-full"
-                  title={m.full_name ?? undefined}
-                >
-                  {m.full_name}
-                </h2>
-                {m.membership_id && (
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    ICAI ID · {m.membership_id}
-                  </p>
-                )}
 
-                <span className="inline-flex items-center gap-1.5 mt-3 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
-                  <Award className="w-3.5 h-3.5" />
-                  {m.points} points
-                </span>
-
-                {m.created_at && (
-                  <p className="text-xs text-muted-foreground mt-3">
-                    Member since {memberSince(m.created_at)}
-                  </p>
-                )}
+                {/* Identity reads left-to-right like a directory entry, rather
+                    than a centred stack. pr-12 keeps it clear of the chip. */}
+                <div className="flex items-start gap-3.5 pr-12">
+                  <Avatar
+                    src={m.avatar_url}
+                    name={m.full_name}
+                    className="w-14 h-14 ring-2 ring-primary/10 ring-offset-2 ring-offset-card"
+                  />
+                  <div className="min-w-0 pt-0.5">
+                    <h2
+                      className="truncate font-semibold leading-snug"
+                      title={m.full_name ?? undefined}
+                    >
+                      {m.full_name}
+                    </h2>
+                    {m.membership_id && (
+                      <p className="mt-0.5 font-mono text-xs text-muted-foreground">
+                        ICAI {m.membership_id}
+                      </p>
+                    )}
+                    {m.created_at && (
+                      <p className="mt-1 text-[11px] text-muted-foreground/80">
+                        Joined {memberSince(m.created_at)}
+                      </p>
+                    )}
+                  </div>
+                </div>
 
                 {m.bio && (
-                  <p className="text-sm text-muted-foreground mt-3 line-clamp-2 break-words max-w-full">
+                  <p className="mt-3.5 line-clamp-2 break-words text-sm leading-relaxed text-muted-foreground">
                     {m.bio}
                   </p>
                 )}
 
-                <div className="flex items-center gap-2 mt-5 w-full">
-                  {m.phone || m.email ? (
-                    <>
-                      {m.phone && (
-                        <a
-                          href={`tel:${m.phone}`}
-                          className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-full bg-muted/60 text-sm font-medium hover:bg-primary hover:text-primary-foreground transition-colors"
-                        >
-                          <Phone className="w-4 h-4" />
-                          Call
-                        </a>
-                      )}
-                      {m.email && (
-                        <a
-                          href={`mailto:${m.email}`}
-                          className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-full bg-muted/60 text-sm font-medium hover:bg-primary hover:text-primary-foreground transition-colors"
-                        >
-                          <Mail className="w-4 h-4" />
-                          Email
-                        </a>
-                      )}
-                    </>
-                  ) : (
-                    <span className="w-full text-xs text-muted-foreground py-2">
-                      No contact details shared
-                    </span>
+                {/* mt-auto pins the actions to the bottom, so the buttons line
+                    up across the row however much content each card has. */}
+                <div className="mt-auto pt-4">
+                  <div className="flex items-center gap-2 border-t border-border/60 pt-3.5">
+                    {m.phone || m.email ? (
+                      <>
+                        {m.phone && (
+                          <a href={`tel:${m.phone}`} className={`${btn("secondary", "sm")} flex-1`}>
+                            <Phone className="w-4 h-4" />
+                            Call
+                          </a>
+                        )}
+                        {m.email && (
+                          <a
+                            href={`mailto:${m.email}`}
+                            className={`${btn("secondary", "sm")} flex-1`}
+                          >
+                            <Mail className="w-4 h-4" />
+                            Email
+                          </a>
+                        )}
+                      </>
+                    ) : (
+                      <span className="py-1 text-xs text-muted-foreground">
+                        No contact details shared
+                      </span>
+                    )}
+                  </div>
+
+                  {isAdmin && (
+                    <div className="mt-2.5 flex justify-end">
+                      <button
+                        onClick={() => toggleVisibility(m)}
+                        disabled={busyId === m.id}
+                        className={btn(
+                          m.directory_hidden ? "secondary" : "dangerGhost",
+                          "sm"
+                        )}
+                      >
+                        {busyId === m.id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : m.directory_hidden ? (
+                          <Undo2 className="w-3.5 h-3.5" />
+                        ) : (
+                          <EyeOff className="w-3.5 h-3.5" />
+                        )}
+                        {m.directory_hidden ? "Restore" : "Remove"}
+                      </button>
+                    </div>
                   )}
                 </div>
-
-                {isAdmin && (
-                  <button
-                    onClick={() => toggleVisibility(m)}
-                    disabled={busyId === m.id}
-                    className={`mt-3 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium transition-colors disabled:opacity-60 ${
-                      m.directory_hidden
-                        ? "border border-border hover:bg-accent"
-                        : "text-destructive hover:bg-destructive/10"
-                    }`}
-                  >
-                    {busyId === m.id ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : m.directory_hidden ? (
-                      <Undo2 className="w-3.5 h-3.5" />
-                    ) : (
-                      <EyeOff className="w-3.5 h-3.5" />
-                    )}
-                    {m.directory_hidden ? "Restore to directory" : "Remove from directory"}
-                  </button>
-                )}
-              </div>
+              </article>
             ))}
           </div>
         )}

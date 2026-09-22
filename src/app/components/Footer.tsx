@@ -95,6 +95,45 @@ export function Footer() {
           </Link>
         </div>
       </div>
+
+      {/* Oversized wordmark across the very bottom. Decorative only — the
+          brand is already a link at the top of the footer — so it's hidden
+          from screen readers and unselectable.
+
+          Drawn as SVG rather than styled text because a clamp()ed font-size
+          can only approximate the width: textLength forces the word to span
+          exactly the box at every viewport, so it stays edge to edge with the
+          same small gutter whether it's a phone or a widescreen. It sits
+          outside the max-w-7xl container so it spans the full page. */}
+      <div className="select-none px-4 sm:px-6" aria-hidden="true">
+        <svg
+          // The viewBox bottom IS the text baseline, and uppercase glyphs sit
+          // on the baseline — so the letters end flush with the footer's
+          // bottom edge, with no descender gap underneath.
+          viewBox="0 0 1000 110"
+          className="block h-auto w-full overflow-visible text-primary"
+          role="presentation"
+          focusable="false"
+        >
+          <defs>
+            <linearGradient id="cacommute-wordmark" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="currentColor" stopOpacity="0.95" />
+              <stop offset="100%" stopColor="currentColor" stopOpacity="0.45" />
+            </linearGradient>
+          </defs>
+          <text
+            x="500"
+            y="110"
+            textAnchor="middle"
+            textLength="1000"
+            lengthAdjust="spacingAndGlyphs"
+            fill="url(#cacommute-wordmark)"
+            style={{ fontSize: 152, fontWeight: 900, fontFamily: "inherit" }}
+          >
+            CACOMMUTE
+          </text>
+        </svg>
+      </div>
     </footer>
   );
 }

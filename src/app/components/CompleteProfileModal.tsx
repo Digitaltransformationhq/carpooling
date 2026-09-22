@@ -3,6 +3,7 @@ import { useLocation } from "react-router";
 import { BadgeCheck, Mail, Phone, User as UserIcon, Loader2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { fetchProfile, updateProfile } from "../data/profiles";
+import { btn } from "../lib/ui";
 
 /**
  * Shown once, over whatever page a member lands on, the first time they sign in
@@ -164,7 +165,7 @@ export function CompleteProfileModal() {
           <button
             type="submit"
             disabled={saving}
-            className="w-full bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+            className={`${btn("primary", "lg")} w-full`}
           >
             {saving && <Loader2 className="w-4 h-4 animate-spin" />}
             {saving ? "Saving…" : "Save and continue"}

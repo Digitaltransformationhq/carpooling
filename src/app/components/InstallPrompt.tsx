@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Download, X, Share, Plus } from "lucide-react";
+import { btn } from "../lib/ui";
 
 /**
  * Chrome/Edge/Android fire `beforeinstallprompt` only when the app is
@@ -108,7 +109,7 @@ export function InstallPrompt() {
               {deferredPrompt ? (
                 <button
                   onClick={handleInstall}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90"
+                  className={btn("primary", "sm")}
                 >
                   <Download className="h-4 w-4" />
                   Install
@@ -116,7 +117,7 @@ export function InstallPrompt() {
               ) : (
                 <button
                   onClick={() => setShowIOSHelp(true)}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90"
+                  className={btn("primary", "sm")}
                 >
                   <Share className="h-4 w-4" />
                   How to install
@@ -124,7 +125,7 @@ export function InstallPrompt() {
               )}
               <button
                 onClick={() => setDismissed(true)}
-                className="rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+                className={btn("ghost", "sm")}
               >
                 Not now
               </button>

@@ -1,13 +1,19 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { MapPin, Calendar, Users, Search, LocateFixed, Loader2, ChevronDown } from "lucide-react";
+import { MapPin, Calendar, Users, Search, LocateFixed, Loader2, Minus, Plus } from "lucide-react";
 import { detectCurrentLocation, type LatLng } from "../lib/geo";
 import { PlaceAutocomplete } from "./PlaceAutocomplete";
 import { EventDatePicker } from "./EventDatePicker";
+import { btn } from "../lib/ui";
 
 interface SearchBarProps {
   variant?: "hero" | "compact";
 }
+
+// Rides carry at most 6 seats (see PublishRide), so searching for more than
+// that could never match anything.
+const MIN_PASSENGERS = 1;
+const MAX_PASSENGERS = 6;
 
 export function SearchBar({ variant = "hero" }: SearchBarProps) {
   const navigate = useNavigate();
@@ -20,6 +26,12 @@ export function SearchBar({ variant = "hero" }: SearchBarProps) {
   // the precise point (not a re-geocode of the text label).
   const [fromCoords, setFromCoords] = useState<LatLng | null>(null);
   const [toCoords, setToCoords] = useState<LatLng | null>(null);
+  // `passengers` stays a string (it goes straight into the query string);
+  // this is the clamped number the stepper reads and writes.
+  const seatCount = Math.min(
+    MAX_PASSENGERS,
+    Math.max(MIN_PASSENGERS, Number(passengers) || MIN_PASSENGERS)
+  );
 
   // earliest selectable date — today (local), so past dates can't be searched
   const today = new Date();
@@ -114,10 +126,7 @@ export function SearchBar({ variant = "hero" }: SearchBarProps) {
               className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
-          <button
-            type="submit"
-            className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
-          >
+          <button type="submit" className={btn("primary")}>
             <Search className="w-5 h-5" />
             <span>Search</span>
           </button>
@@ -133,6 +142,10 @@ export function SearchBar({ variant = "hero" }: SearchBarProps) {
     "focus:ring-primary/60 focus:bg-card focus:border-transparent transition-colors";
   const labelClass =
     "text-xs font-medium text-muted-foreground flex items-center gap-1.5 px-0.5";
+  const stepperButton =
+    "w-8 h-8 shrink-0 rounded-lg bg-card text-foreground ring-1 ring-black/[0.06] shadow-sm " +
+    "flex items-center justify-center transition-colors hover:bg-accent " +
+    "disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-card";
 
   return (
     <form
@@ -204,26 +217,35 @@ export function SearchBar({ variant = "hero" }: SearchBarProps) {
             <Users className="w-3.5 h-3.5" />
             Passengers
           </label>
-          <div className="relative">
-            <select
-              value={passengers}
-              onChange={(e) => setPassengers(e.target.value)}
-              className={`${field} appearance-none pr-10 cursor-pointer`}
+          {/* Stepper rather than a select — one tap per seat, and it keeps the
+              same 44px height as the fields beside it so the row stays even. */}
+          <div className="flex items-center justify-between gap-2 w-full p-1.5 bg-muted/40 border border-transparent rounded-xl">
+            <button
+              type="button"
+              onClick={() => setPassengers(String(Math.max(MIN_PASSENGERS, seatCount - 1)))}
+              disabled={seatCount <= MIN_PASSENGERS}
+              aria-label="Fewer passengers"
+              className={stepperButton}
             >
-              <option value="1">1 passenger</option>
-              <option value="2">2 passengers</option>
-              <option value="3">3 passengers</option>
-              <option value="4">4+ passengers</option>
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Minus className="w-4 h-4" />
+            </button>
+            <span className="text-sm font-medium select-none" aria-live="polite">
+              {seatCount} {seatCount === 1 ? "passenger" : "passengers"}
+            </span>
+            <button
+              type="button"
+              onClick={() => setPassengers(String(Math.min(MAX_PASSENGERS, seatCount + 1)))}
+              disabled={seatCount >= MAX_PASSENGERS}
+              aria-label="More passengers"
+              className={stepperButton}
+            >
+              <Plus className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </div>
 
-      <button
-        type="submit"
-        className="w-full bg-primary text-primary-foreground py-3.5 rounded-xl font-semibold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-primary/25"
-      >
+      <button type="submit" className={`${btn("primary", "lg")} w-full`}>
         <Search className="w-5 h-5" />
         <span>Search for rides</span>
       </button>

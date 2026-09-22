@@ -7,6 +7,7 @@ import {
   usePushNotifications,
   type PushState,
 } from "../lib/push";
+import { btn } from "../lib/ui";
 
 function errorText(err: unknown): string {
   if (err instanceof Error) return err.message;
@@ -65,13 +66,13 @@ export function RideAlertsNudge({
           <button
             onClick={() => run(enablePush)}
             disabled={busy}
-            className="bg-primary text-primary-foreground px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-60"
+            className={btn("primary", "sm")}
           >
             {busy ? "Turning on…" : "Turn on"}
           </button>
           <button
             onClick={dismissPushNudge}
-            className="px-3 py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground"
+            className={btn("ghost", "sm")}
           >
             Not now
           </button>
@@ -106,7 +107,7 @@ export function RideAlertsSettings() {
   const on = state === "on";
 
   return (
-    <div className="bg-card border border-primary rounded-2xl p-6 md:p-8">
+    <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-sm md:p-8">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <h2 className="text-xl font-semibold flex items-center gap-2">
@@ -127,11 +128,7 @@ export function RideAlertsSettings() {
           <button
             onClick={() => run(on ? () => disablePush(true) : enablePush)}
             disabled={busy}
-            className={`shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-60 ${
-              on
-                ? "border border-border hover:bg-muted"
-                : "bg-primary text-primary-foreground hover:bg-primary/90"
-            }`}
+            className={`${btn(on ? "secondary" : "primary", "sm")} shrink-0`}
           >
             {busy ? "…" : on ? "Turn off" : "Turn on"}
           </button>

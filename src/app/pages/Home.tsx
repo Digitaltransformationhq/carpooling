@@ -14,6 +14,8 @@ import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { formatDate } from "../lib/format";
 import { RideAlertsNudge } from "../components/RideAlerts";
+import { EmptyState } from "../components/EmptyState";
+import { btn } from "../lib/ui";
 import { Leaf, Award, Users, BadgeCheck, Car, Gift, Search, Calendar } from "lucide-react";
 
 export function Home() {
@@ -114,19 +116,17 @@ export function Home() {
             <p className="text-xl text-foreground/70 max-w-2xl mx-auto mb-8">
               {user ? heroSubtitle : "Earn points every time you share or join a ride."}
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                to="/search"
-                className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-8 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors shadow-lg shadow-primary/30"
-              >
-                <Search className="w-5 h-5" />
+            {/* Pills, not flat rectangles: a top-lit gradient and an inset
+                white hairline give the primary some dimension, and the
+                secondary is glass over the hero photo rather than solid white.
+                Both lift slightly on hover. */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link to="/search" className={`${btn("primary", "lg")} w-full sm:w-auto`}>
+                <Search className="w-[18px] h-[18px]" />
                 Find a Ride
               </Link>
-              <Link
-                to="/publish"
-                className="inline-flex items-center justify-center gap-2 bg-card text-foreground border border-border px-8 py-3 rounded-lg font-medium hover:bg-accent transition-colors shadow-sm"
-              >
-                <Car className="w-5 h-5" />
+              <Link to="/publish" className={`${btn("secondary", "lg")} w-full sm:w-auto`}>
+                <Car className="w-[18px] h-[18px]" />
                 Publish a Ride
               </Link>
             </div>
@@ -239,22 +239,30 @@ export function Home() {
               ))}
             </div>
           ) : featuredRides.length === 0 ? (
-            <div className="bg-card border border-primary rounded-xl p-10 text-center">
-              <div className="inline-flex items-center justify-center w-14 h-14 bg-primary/15 rounded-full mb-4">
-                <Car className="w-7 h-7 text-primary" />
-              </div>
-              <p className="font-semibold text-lg mb-1">No rides leaving soon yet</p>
-              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                Be the first to share a ride — publish your trip, help others travel, and earn
-                reward points when the trip is completed.
-              </p>
-              <Link
-                to="/publish"
-                className="inline-block bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors"
-              >
-                Publish a ride
-              </Link>
-            </div>
+            <EmptyState
+              eyebrow={
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                  <Award className="w-3.5 h-3.5" />
+                  +2 points per trip you drive
+                </span>
+              }
+              /* Not "No rides leaving soon" — that would just echo the
+                 section heading directly above it. */
+              title="Nothing leaving just yet"
+              body="Publish a trip and fellow CAs can claim a seat."
+              actions={
+                <>
+                  <Link to="/publish" className={btn("primary")}>
+                    <Car className="w-4 h-4" />
+                    Publish a ride
+                  </Link>
+                  <Link to="/search" className={btn("ghost")}>
+                    <Search className="w-4 h-4" />
+                    Browse all rides
+                  </Link>
+                </>
+              }
+            />
           ) : (
             <div className="space-y-4">
               {featuredRides.map((ride) => (
@@ -369,12 +377,10 @@ export function Home() {
             Every shared seat means fewer cars and less CO₂. Publish a ride, fill empty seats, and
             travel greener together.
           </p>
-          <a
-            href="/publish"
-            className="inline-block bg-primary text-primary-foreground px-8 py-4 rounded-lg hover:bg-primary/90 transition-colors shadow-lg shadow-primary/30"
-          >
+          <Link to="/publish" className={btn("primary", "lg")}>
+            <Car className="w-[18px] h-[18px]" />
             Start Publishing Rides
-          </a>
+          </Link>
         </div>
       </section>
         </>

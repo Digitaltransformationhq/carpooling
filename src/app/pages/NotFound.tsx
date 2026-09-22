@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import { Home } from "lucide-react";
+import { btn } from "../lib/ui";
 
 export function NotFound() {
   return (
@@ -12,7 +13,7 @@ export function NotFound() {
         </p>
         <Link
           to="/"
-          className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors"
+          className={btn("primary", "lg")}
         >
           <Home className="w-5 h-5" />
           <span>Back to Home</span>

@@ -11,7 +11,18 @@ import {
   type EventItem,
 } from "../data/events";
 import { PlaceAutocomplete } from "../components/PlaceAutocomplete";
+import { EventDatePicker } from "../components/EventDatePicker";
 import { AdminRides } from "../components/AdminRides";
+import { EmptyState } from "../components/EmptyState";
+import { btn } from "../lib/ui";
+
+// One filled field style for the whole form, matching the hero search card
+// rather than the default bordered inputs.
+const adminField =
+  "w-full py-2.5 px-4 text-sm bg-muted/40 border border-transparent rounded-xl " +
+  "placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 " +
+  "focus:ring-primary/60 focus:bg-card transition-colors";
+const adminLabel = "block text-xs font-medium text-muted-foreground mb-1.5";
 
 function todayLocal(): string {
   const d = new Date();
@@ -197,19 +208,18 @@ export function Admin() {
         {tab === "rides" ? (
           <AdminRides />
         ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-[380px_minmax(0,1fr)] gap-6">
-          {/* Create form */}
-          <div className="bg-card border border-primary rounded-xl p-6 h-fit">
+        /* The form used to be a tall 380px column beside the list, which
+           pushed the page well past the fold. As a full-width bar its fields
+           fit on two rows, and the list starts much higher up. */
+        <div className="space-y-6">
+          {/* Create / edit form */}
+          <div className="bg-card border border-border/60 rounded-2xl p-5 shadow-sm md:p-6">
             <div className="flex items-center justify-between gap-2 mb-4">
               <h2 className="text-lg font-semibold">
                 {editingId ? "Edit event" : "Publish an event"}
               </h2>
               {editingId && (
-                <button
-                  type="button"
-                  onClick={cancelEdit}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
-                >
+                <button type="button" onClick={cancelEdit} className={btn("ghost", "sm")}>
                   <X className="w-3.5 h-3.5" />
                   Cancel
                 </button>
@@ -226,77 +236,76 @@ export function Admin() {
                 {msg}
               </div>
             )}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1.5">Title</label>
-                <input
-                  type="text"
-                  value={form.title}
-                  onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  placeholder="e.g. ICAI CPE Seminar"
-                  className="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium mb-1.5">Date</label>
+            <form onSubmit={handleSubmit}>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="lg:col-span-2">
+                  <label className={adminLabel}>Title</label>
                   <input
-                    type="date"
-                    value={form.date}
-                    // Editing a past event must not be blocked by the
-                    // "no events in the past" rule that applies to new ones.
-                    min={editingId && form.date < todayStr ? form.date : todayStr}
-                    onChange={(e) => setForm({ ...form, date: e.target.value })}
-                    className="w-full px-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    type="text"
+                    value={form.title}
+                    onChange={(e) => setForm({ ...form, title: e.target.value })}
+                    placeholder="e.g. ICAI CPE Seminar"
+                    className={adminField}
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1.5">Time</label>
+                  <label className={adminLabel}>Date</label>
+                  {/* The app's own picker, not a bare <input type="date"> —
+                      it matches the rest of the app and marks event days. */}
+                  <EventDatePicker
+                    value={form.date}
+                    onChange={(d) => setForm({ ...form, date: d })}
+                    // Editing a past event must not be blocked by the
+                    // "no events in the past" rule that applies to new ones.
+                    min={editingId && form.date < todayStr ? form.date : todayStr}
+                    className={adminField}
+                  />
+                </div>
+                <div>
+                  <label className={adminLabel}>Time</label>
                   <input
                     type="text"
                     value={form.time}
                     onChange={(e) => setForm({ ...form, time: e.target.value })}
                     placeholder="10:00 AM"
-                    className="w-full px-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    className={adminField}
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className={adminLabel}>Location</label>
+                  <PlaceAutocomplete
+                    value={form.location}
+                    onChange={(text) => setForm({ ...form, location: text })}
+                    onSelect={({ label }) => setForm({ ...form, location: label })}
+                    placeholder="Venue, city"
+                    className={adminField}
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className={adminLabel}>Description</label>
+                  <input
+                    type="text"
+                    value={form.description}
+                    onChange={(e) => setForm({ ...form, description: e.target.value })}
+                    placeholder="What's the event about?"
+                    className={adminField}
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1.5">Location</label>
-                <PlaceAutocomplete
-                  value={form.location}
-                  onChange={(text) => setForm({ ...form, location: text })}
-                  onSelect={({ label }) => setForm({ ...form, location: label })}
-                  placeholder="Venue, city"
-                  className="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                />
+
+              <div className="mt-5 flex justify-end border-t border-border/60 pt-4">
+                <button type="submit" disabled={saving} className={btn("primary")}>
+                  {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {saving
+                    ? editingId
+                      ? "Saving…"
+                      : "Publishing…"
+                    : editingId
+                      ? "Save changes"
+                      : "Publish event"}
+                </button>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1.5">Description</label>
-                <textarea
-                  value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  placeholder="What's the event about?"
-                  rows={3}
-                  className="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={saving}
-                className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
-              >
-                {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-                {saving
-                  ? editingId
-                    ? "Saving…"
-                    : "Publishing…"
-                  : editingId
-                    ? "Save changes"
-                    : "Publish event"}
-              </button>
             </form>
           </div>
 
@@ -304,9 +313,11 @@ export function Admin() {
           <div>
             <h2 className="text-lg font-semibold mb-4">All events ({events.length})</h2>
             {events.length === 0 ? (
-              <div className="bg-card border border-border rounded-xl p-8 text-center text-muted-foreground">
-                No events yet. Publish one to get started.
-              </div>
+              <EmptyState
+                title="No events yet"
+                body="Publish one with the form above and it will appear here, on Forthcoming Events, and in the ride date pickers."
+                preview={null}
+              />
             ) : (
               <div className="space-y-3">
                 {events.map((e) => {

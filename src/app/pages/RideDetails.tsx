@@ -20,6 +20,7 @@ import { fetchProfile } from "../data/profiles";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { formatDate, formatTime } from "../lib/format";
+import { btn } from "../lib/ui";
 import { PlaceAutocomplete } from "../components/PlaceAutocomplete";
 import { RideAlertsNudge } from "../components/RideAlerts";
 import { Avatar } from "../components/Avatar";
@@ -413,7 +414,7 @@ export function RideDetails() {
                   {!isCompleted && !isStarted && (
                     <button
                       onClick={handleStart}
-                      className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors mb-3"
+                      className={`${btn("secondary", "lg")} w-full mb-3`}
                     >
                       Start ride
                     </button>
@@ -422,7 +423,7 @@ export function RideDetails() {
                     <>
                       <button
                         onClick={handleComplete}
-                        className="w-full border border-primary py-3 rounded-lg font-medium hover:bg-primary/10 transition-colors mb-3"
+                        className={`${btn("secondary", "lg")} w-full mb-3`}
                       >
                         Mark as complete
                       </button>
@@ -436,7 +437,7 @@ export function RideDetails() {
                   )}
                   <button
                     onClick={handleRemove}
-                    className="w-full border border-destructive/40 text-destructive py-3 rounded-lg font-medium hover:bg-destructive/10 transition-colors"
+                    className={`${btn("danger", "lg")} w-full`}
                   >
                     Remove ride
                   </button>
@@ -481,7 +482,7 @@ export function RideDetails() {
                                 disabled={r.seats > available}
                                 title={r.seats > available ? "Not enough seats left" : "Accept"}
                                 aria-label={`Accept ${r.passenger_name}`}
-                                className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                className={btn("primary", "sm")}
                               >
                                 <Check className="w-4 h-4" />
                                 Accept
@@ -489,7 +490,7 @@ export function RideDetails() {
                               <button
                                 onClick={() => handleRemoveRider(r.id)}
                                 aria-label={`Decline ${r.passenger_name}`}
-                                className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg text-destructive hover:bg-destructive/10 transition-colors"
+                                className={btn("danger", "sm")}
                               >
                                 <X className="w-4 h-4" />
                                 Decline
@@ -554,7 +555,7 @@ export function RideDetails() {
                               )}
                               <button
                                 onClick={() => handleRemoveRider(r.id)}
-                                className="text-xs font-medium px-3 py-1.5 rounded-lg text-destructive hover:bg-destructive/10 transition-colors"
+                                className={btn("danger", "sm")}
                               >
                                 Remove
                               </button>
@@ -597,7 +598,7 @@ export function RideDetails() {
                       </p>
                       <button
                         onClick={() => handleCancelMyBooking(myPending, "pending")}
-                        className="text-sm font-medium text-destructive hover:underline"
+                        className={btn("danger", "sm")}
                       >
                         Withdraw request
                       </button>
@@ -655,7 +656,7 @@ export function RideDetails() {
                             "accepted"
                           )
                         }
-                        className="w-full text-sm font-medium text-destructive border border-destructive/40 rounded-lg py-2.5 hover:bg-destructive/10 transition-colors"
+                        className={`${btn("danger", "lg")} w-full`}
                       >
                         {myAccepted === 1
                           ? "Cancel booking"
@@ -769,7 +770,7 @@ export function RideDetails() {
                       <button
                         onClick={handleRequest}
                         disabled={booking}
-                        className="w-full bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors mb-3 disabled:opacity-60"
+                        className={`${btn("primary", "lg")} w-full mb-3`}
                       >
                         {booking ? "Sending request…" : "Request to join"}
                       </button>

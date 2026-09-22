@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Navigate, useNavigate } from "react-router";
-import { Camera, Award, Car, MapPin, LogOut } from "lucide-react";
+import { Camera, Award, Car, MapPin, LogOut, BadgeCheck } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import {
   fetchProfile,
@@ -11,6 +11,15 @@ import {
 import { fetchUserStats, type UserStats } from "../data/account";
 import { RideAlertsSettings } from "../components/RideAlerts";
 import { Avatar } from "../components/Avatar";
+import { btn } from "../lib/ui";
+
+// One filled field style for the form, matching the hero search card and the
+// admin form rather than the default bordered inputs.
+const accountField =
+  "w-full py-2.5 px-4 text-sm bg-muted/40 border border-transparent rounded-xl " +
+  "placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 " +
+  "focus:ring-primary/60 focus:bg-card transition-colors";
+const accountLabel = "block text-xs font-medium text-muted-foreground mb-1.5";
 
 export function Account() {
   const navigate = useNavigate();
@@ -144,144 +153,157 @@ export function Account() {
 
   return (
     <div className="min-h-screen bg-muted/30 py-8">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-        {/* Profile Header */}
-        <div className="bg-card border border-primary rounded-2xl p-6 md:p-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-            <div className="relative w-24 h-24 shrink-0">
-              <Avatar src={avatarUrl} name={displayName} className="w-24 h-24" />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                aria-label="Change photo"
-                className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary border-2 border-card flex items-center justify-center hover:bg-primary/90 transition-colors disabled:opacity-60"
-              >
-                <Camera className="w-4 h-4 text-primary-foreground" />
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handlePhotoChange}
-              />
-              {uploading && (
-                <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center text-white text-xs">
-                  …
-                </div>
-              )}
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-2xl font-bold">{displayName}</h1>
-                {verified && (
-                  <span className="px-3 py-1 bg-primary/20 text-foreground text-sm rounded-full">
-                    Verified
-                  </span>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 className="mb-6 text-3xl font-bold tracking-tight">Your account</h1>
+
+        {/* Two columns so identity and settings sit side by side instead of
+            stacking into one long scroll. Deliberately NOT sticky — pinning
+            the left panel makes the page feel like two separate scroll
+            regions. The whole page scrolls as one. */}
+        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+          {/* ---------- identity ---------- */}
+          <aside className="rounded-2xl border border-border/60 bg-card p-6 shadow-sm">
+            <div className="flex flex-col items-center text-center">
+              <div className="relative h-24 w-24 shrink-0">
+                <Avatar src={avatarUrl} name={displayName} className="h-24 w-24" />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  aria-label="Change photo"
+                  className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full border-2 border-card bg-primary transition-colors hover:bg-primary/90 disabled:opacity-60"
+                >
+                  <Camera className="h-4 w-4 text-primary-foreground" />
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handlePhotoChange}
+                />
+                {uploading && (
+                  <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 text-xs text-white">
+                    …
+                  </div>
                 )}
               </div>
-              <p className="text-muted-foreground text-sm">Member since {memberSince}</p>
+
+              <h2 className="mt-4 w-full truncate text-lg font-semibold" title={displayName}>
+                {displayName}
+              </h2>
+              {verified && (
+                <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-0.5 text-[11px] font-semibold text-foreground">
+                  <BadgeCheck className="h-3.5 w-3.5 text-primary" />
+                  Verified
+                </span>
+              )}
+              <p className="mt-2 text-xs text-muted-foreground">Member since {memberSince}</p>
             </div>
-            <button
-              onClick={handleSignOut}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-destructive/40 text-destructive text-sm font-medium hover:bg-destructive/10 transition-colors shrink-0"
-            >
-              <LogOut className="w-4 h-4" />
+
+            {/* Labelled rows, not three columns — "Rides as Passenger" would
+                squash to two cramped lines in a 320px panel. */}
+            <dl className="mt-6 space-y-1 border-t border-border/60 pt-4">
+              {stat.map((s) => (
+                <div key={s.label} className="flex items-center justify-between gap-3 py-1.5">
+                  <dt className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <s.icon
+                      className={`h-4 w-4 ${s.accent ? "text-primary" : "text-muted-foreground"}`}
+                    />
+                    {s.label}
+                  </dt>
+                  <dd className={`text-base font-bold ${s.accent ? "text-primary" : ""}`}>
+                    {s.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+
+            <p className="mt-3 rounded-lg bg-muted/50 p-3 text-[11px] leading-relaxed text-muted-foreground">
+              Earn <span className="font-semibold text-foreground">2 points</span> when a ride you
+              drove is completed, and{" "}
+              <span className="font-semibold text-foreground">1 point</span> for each completed ride
+              you join.
+            </p>
+
+            <button onClick={handleSignOut} className={`${btn("danger", "sm")} mt-4 w-full`}>
+              <LogOut className="h-4 w-4" />
               Log out
             </button>
-          </div>
+          </aside>
 
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t">
-            {stat.map((s) => (
-              <div key={s.label} className="text-center">
-                <div
-                  className={`text-2xl font-bold flex items-center justify-center gap-1.5 ${
-                    s.accent ? "text-primary" : ""
-                  }`}
-                >
-                  {s.accent && <Award className="w-6 h-6" />}
-                  {s.value}
+          {/* ---------- settings ---------- */}
+          <div className="space-y-6">
+            <RideAlertsSettings />
+
+            <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-sm md:p-8">
+              <h2 className="text-lg font-semibold">Edit profile</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Your name and photo appear on rides you publish.
+              </p>
+
+              {/* Two fields per row — four stacked full-width inputs was most
+                  of this page's scrolling. */}
+              <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className={accountLabel}>Membership ID</label>
+                  <input
+                    type="text"
+                    value={form.membership_id}
+                    onChange={(e) => setForm({ ...form, membership_id: e.target.value })}
+                    placeholder="e.g. 123456"
+                    className={accountField}
+                  />
                 </div>
-                <div className="text-sm text-muted-foreground">{s.label}</div>
+                <div>
+                  <label className={accountLabel}>Full name</label>
+                  <input
+                    type="text"
+                    value={form.full_name}
+                    onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+                    placeholder="Your name"
+                    className={accountField}
+                  />
+                </div>
+                <div>
+                  <label className={accountLabel}>Phone</label>
+                  <input
+                    type="tel"
+                    value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    placeholder="+91 98765 43210"
+                    className={accountField}
+                  />
+                </div>
+                <div>
+                  <label className={accountLabel}>Email</label>
+                  <input
+                    type="email"
+                    value={email}
+                    disabled
+                    className={`${accountField} cursor-not-allowed opacity-70`}
+                  />
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Your login email can't be changed here.
+                  </p>
+                </div>
               </div>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground text-center mt-3">
-            Earn <span className="font-medium text-foreground">2 points</span> when a ride you drove
-            is completed and <span className="font-medium text-foreground">1 point</span> for each
-            completed ride you join.
-          </p>
-        </div>
 
-        <RideAlertsSettings />
-
-        {/* Edit Profile */}
-        <div className="bg-card border border-primary rounded-2xl p-6 md:p-8">
-          <h2 className="text-xl font-semibold mb-4">Edit Profile</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Membership ID</label>
-              <input
-                type="text"
-                value={form.membership_id}
-                onChange={(e) => setForm({ ...form, membership_id: e.target.value })}
-                placeholder="e.g. 123456"
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              />
+              <div className="mt-6 flex flex-wrap items-center justify-end gap-3 border-t border-border/60 pt-5">
+                {savedMsg && (
+                  <p
+                    className={`mr-auto text-sm ${
+                      savedMsg === "Profile saved!" ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
+                    {savedMsg}
+                  </p>
+                )}
+                <button onClick={handleSave} disabled={saving} className={btn("primary")}>
+                  {saving ? "Saving…" : "Save changes"}
+                </button>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Full name</label>
-              <input
-                type="text"
-                value={form.full_name}
-                onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-                placeholder="Your name"
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Email</label>
-              <input
-                type="email"
-                value={email}
-                disabled
-                className="w-full px-4 py-2 border rounded-lg bg-muted/50 text-muted-foreground cursor-not-allowed"
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Your login email can't be changed here.
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Phone</label>
-              <input
-                type="tel"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                placeholder="+91 98765 43210"
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
-          </div>
-
-          <div className="pt-6">
-            {savedMsg && (
-              <p
-                className={`text-sm mb-3 ${
-                  savedMsg === "Profile saved!" ? "text-green-600" : "text-red-600"
-                }`}
-              >
-                {savedMsg}
-              </p>
-            )}
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="w-full bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60"
-            >
-              {saving ? "Saving…" : "Save Changes"}
-            </button>
           </div>
         </div>
       </div>

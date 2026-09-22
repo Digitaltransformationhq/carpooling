@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router";
+import { useSearchParams, Link } from "react-router";
+import { Car } from "lucide-react";
 import { SearchBar } from "../components/SearchBar";
 import { RideCard } from "../components/RideCard";
+import { EmptyState } from "../components/EmptyState";
 import { Ride } from "../data/mockData";
 import { searchRides } from "../data/rides";
+import { btn } from "../lib/ui";
 
 export function SearchResults() {
   const [searchParams] = useSearchParams();
@@ -68,10 +71,21 @@ export function SearchResults() {
         )}
 
         {!loading && results.length === 0 && (
-          <div className="bg-card border border-primary rounded-lg p-12 text-center">
-            <p className="text-muted-foreground mb-4">No rides found for your search criteria</p>
-            <p className="text-sm text-muted-foreground">Try adjusting your search dates</p>
-          </div>
+          <EmptyState
+            title="No rides on this route yet"
+            body="Nothing matches those dates. Try a wider date range — or publish the trip yourself and let someone claim a seat."
+            actions={
+              <>
+                <Link to="/publish" className={btn("primary")}>
+                  <Car className="w-4 h-4" />
+                  Publish this ride
+                </Link>
+                <Link to="/search" className={btn("ghost")}>
+                  Browse all rides
+                </Link>
+              </>
+            }
+          />
         )}
       </div>
     </div>

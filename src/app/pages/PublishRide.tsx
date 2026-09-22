@@ -6,6 +6,7 @@ import { detectCurrentLocation, type LatLng } from "../lib/geo";
 import { PlaceAutocomplete } from "../components/PlaceAutocomplete";
 import { EventDatePicker } from "../components/EventDatePicker";
 import { useAuth } from "../context/AuthContext";
+import { btn } from "../lib/ui";
 
 // local YYYY-MM-DD (today) — used as the earliest selectable date
 function todayLocal(): string {
@@ -327,7 +328,7 @@ export function PublishRide() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full bg-primary text-primary-foreground py-4 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60"
+                className={`${btn("primary", "lg")} w-full`}
               >
                 {submitting ? "Publishing…" : "Publish Ride"}
               </button>

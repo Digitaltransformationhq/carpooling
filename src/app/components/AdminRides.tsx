@@ -16,6 +16,7 @@ import {
 import { Ride } from "../data/mockData";
 import { fetchRides, fetchRideBookings, deleteRide, type RideBooking } from "../data/rides";
 import { formatDate, formatTime } from "../lib/format";
+import { btn } from "../lib/ui";
 
 type Filter = "all" | "upcoming" | "completed";
 
@@ -206,7 +207,7 @@ export function AdminRides() {
                   <div className="flex items-center gap-1 shrink-0">
                     <Link
                       to={`/ride/${r.id}`}
-                      className="text-xs font-medium px-3 py-1.5 rounded-lg border border-border hover:bg-accent transition-colors"
+                      className={btn("secondary", "sm")}
                     >
                       Open
                     </Link>
@@ -224,7 +225,7 @@ export function AdminRides() {
                 <button
                   onClick={() => toggle(r.id)}
                   aria-expanded={open}
-                  className="w-full flex items-center gap-1.5 px-4 pb-3 text-sm text-primary hover:underline"
+                  className={`${btn("ghost", "sm")} w-full justify-start pb-3`}
                 >
                   {open ? (
                     <ChevronDown className="w-4 h-4" />

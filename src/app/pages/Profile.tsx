@@ -6,7 +6,9 @@ import { fetchUserStats, fetchMyTrips, type UserStats, type Trip } from "../data
 import { deleteRide, markRideComplete, markRideStarted } from "../data/rides";
 import { supabase } from "../lib/supabase";
 import { formatDate } from "../lib/format";
+import { btn } from "../lib/ui";
 import { RideAlertsNudge } from "../components/RideAlerts";
+import { EmptyState } from "../components/EmptyState";
 
 type Filter = "all" | "upcoming" | "completed";
 
@@ -118,7 +120,7 @@ export function Profile() {
 
   return (
     <div className="min-h-screen bg-muted/30 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
           <div>
@@ -129,7 +131,7 @@ export function Profile() {
           </div>
           <Link
             to="/publish"
-            className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-xl font-medium hover:bg-primary/90 transition-colors shadow-sm shadow-primary/25 shrink-0"
+            className={`${btn("primary")} shrink-0`}
           >
             <Plus className="w-4 h-4" />
             Publish a ride
@@ -138,55 +140,82 @@ export function Profile() {
 
         <RideAlertsNudge className="mb-6" />
 
-        {/* Ride stat summary */}
-        <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6">
-          {summary.map((s) => (
+        {/* Stat summary — one strip with hairline dividers. Three tall centred
+            boxes for three numbers was mostly empty space. */}
+        <div className="mb-6 grid grid-cols-3 overflow-hidden rounded-2xl border border-border/60 bg-card">
+          {summary.map((s, i) => (
             <div
               key={s.label}
-              className="bg-card border border-border rounded-2xl p-4 flex flex-col items-center text-center"
+              className={`flex flex-col items-center justify-center gap-1.5 p-3 text-center sm:flex-row sm:gap-3 sm:p-4 sm:text-left ${
+                i > 0 ? "border-l border-border/60" : ""
+              }`}
             >
-              <s.icon
-                className={`w-5 h-5 mb-1.5 ${s.accent ? "text-primary" : "text-muted-foreground"}`}
-              />
-              <div className={`text-2xl font-bold ${s.accent ? "text-primary" : ""}`}>{s.value}</div>
-              <div className="text-xs text-muted-foreground mt-0.5">{s.label}</div>
+              <span
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+                  s.accent ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                }`}
+              >
+                <s.icon className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <div className={`text-xl font-bold leading-none ${s.accent ? "text-primary" : ""}`}>
+                  {s.value}
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground">{s.label}</div>
+              </div>
             </div>
           ))}
         </div>
 
-        {/* Filter segmented control */}
-        <div className="inline-flex items-center gap-1 bg-muted/60 border border-border rounded-full p-1 mb-5">
-          {filters.map((f) => (
-            <button
-              key={f.key}
-              onClick={() => setFilter(f.key)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                filter === f.key
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {f.label}
-              <span className="ml-1.5 text-xs opacity-70">{f.count}</span>
-            </button>
-          ))}
+        {/* Filter + count share a row rather than stacking */}
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <div className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/60 p-1">
+            {filters.map((f) => (
+              <button
+                key={f.key}
+                onClick={() => setFilter(f.key)}
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                  filter === f.key
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {f.label}
+                <span className="ml-1.5 text-xs opacity-70">{f.count}</span>
+              </button>
+            ))}
+          </div>
+          {filtered.length > 0 && (
+            <p className="text-sm text-muted-foreground">
+              {filtered.length} {filtered.length === 1 ? "ride" : "rides"}
+            </p>
+          )}
         </div>
 
         {/* Rides list */}
         {filtered.length === 0 ? (
-          <div className="bg-card border border-dashed border-border rounded-2xl p-12 text-center">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <Route className="w-6 h-6 text-primary" />
-            </div>
-            <p className="font-medium mb-1">
-              {filter === "all" ? "No rides yet" : `No ${filter} rides`}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {filter === "all"
-                ? "Publish a ride or book a seat and it'll show up here."
-                : "Try a different filter to see your other rides."}
-            </p>
-          </div>
+          <EmptyState
+            title={filter === "all" ? "No rides yet" : `No ${filter} rides`}
+            body={
+              filter === "all"
+                ? "Publish a trip or book a seat — it shows up here either way."
+                : "Try a different filter to see your other rides."
+            }
+            actions={
+              filter === "all" ? (
+                <>
+                  <Link to="/publish" className={btn("primary")}>
+                    <Plus className="w-4 h-4" />
+                    Publish a ride
+                  </Link>
+                  <Link to="/search" className={btn("ghost")}>
+                    <Route className="w-4 h-4" />
+                    Find a ride
+                  </Link>
+                </>
+              ) : undefined
+            }
+          />
         ) : (
           <div className="space-y-4">
             {filtered.map((trip) => {
@@ -299,7 +328,7 @@ export function Profile() {
                               e.stopPropagation();
                               handleStart(trip.rideId!);
                             }}
-                            className="text-xs font-medium px-3 py-1.5 rounded-lg border border-primary hover:bg-primary/10 transition-colors"
+                            className={btn("secondary", "sm")}
                           >
                             Start ride
                           </button>
@@ -310,7 +339,7 @@ export function Profile() {
                               e.stopPropagation();
                               handleComplete(trip.rideId!);
                             }}
-                            className="text-xs font-medium px-3 py-1.5 rounded-lg border border-primary hover:bg-primary/10 transition-colors"
+                            className={btn("secondary", "sm")}
                           >
                             Mark complete
                           </button>
@@ -320,7 +349,7 @@ export function Profile() {
                             e.stopPropagation();
                             handleRemove(trip.rideId!);
                           }}
-                          className="text-xs font-medium px-3 py-1.5 rounded-lg text-destructive hover:bg-destructive/10 transition-colors"
+                          className={btn("danger", "sm")}
                         >
                           Remove
                         </button>
