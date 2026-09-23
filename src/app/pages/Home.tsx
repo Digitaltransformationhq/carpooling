@@ -12,11 +12,24 @@ import {
 } from "../data/account";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
-import { formatDate } from "../lib/format";
+import { formatDate, formatTime } from "../lib/format";
+import { fetchEvents, type EventItem } from "../data/events";
 import { RideAlertsNudge } from "../components/RideAlerts";
 import { EmptyState } from "../components/EmptyState";
 import { btn } from "../lib/ui";
-import { Leaf, Award, Users, BadgeCheck, Car, Gift, Search, Calendar } from "lucide-react";
+import {
+  Leaf,
+  Award,
+  Users,
+  BadgeCheck,
+  Car,
+  Gift,
+  Search,
+  Calendar,
+  CalendarDays,
+  Clock,
+  MapPin,
+} from "lucide-react";
 
 export function Home() {
   const { user, profile } = useAuth();
@@ -25,6 +38,7 @@ export function Home() {
   const [loadingRides, setLoadingRides] = useState(true);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [incoming, setIncoming] = useState<IncomingRequest[]>([]);
+  const [events, setEvents] = useState<EventItem[]>([]);
 
   // Post-login / deep link: scroll to "Rides Leaving Soon". Email sign-in sets
   // the URL hash; Google sign-in survives the OAuth round-trip via a one-shot
@@ -39,7 +53,7 @@ export function Home() {
       el.scrollIntoView({ behavior: "smooth", block: "start" });
       sessionStorage.removeItem("scrollTo");
     }
-  }, [location.hash, loadingRides, trips, incoming]);
+  }, [location.hash, loadingRides, trips, incoming, events]);
 
   useEffect(() => {
     fetchRecentRides(10)
@@ -58,6 +72,26 @@ export function Home() {
       .on("postgres_changes", { event: "*", schema: "public", table: "rides" }, () => {
         fetchRecentRides(10).then(setFeaturedRides).catch(() => {});
       })
+      .subscribe();
+    return () => {
+      client.removeChannel(channel);
+    };
+  }, []);
+
+  // Forthcoming events, kept live — an admin can add one at any time and the
+  // home page shouldn't need a refresh to show it.
+  useEffect(() => {
+    const load = () => {
+      fetchEvents()
+        .then(setEvents)
+        .catch(() => setEvents([]));
+    };
+    load();
+    if (!supabase) return;
+    const client = supabase;
+    const channel = client
+      .channel("home-events")
+      .on("postgres_changes", { event: "*", schema: "public", table: "events" }, load)
       .subscribe();
     return () => {
       client.removeChannel(channel);
@@ -93,6 +127,7 @@ export function Home() {
     .filter((t) => !t.completed && t.date >= todayStr)
     .sort((a, b) => a.date.localeCompare(b.date))
     .slice(0, 4);
+  const nextEvents = events.slice(0, 3);
   const firstName =
     profile?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "there";
   const points = profile?.points ?? 0;
@@ -219,6 +254,63 @@ export function Home() {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Forthcoming events — hidden entirely when there are none, rather
+          than parking an empty state above the rides everyone came for. */}
+      {nextEvents.length > 0 && (
+        <section className="py-10 md:py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-end justify-between gap-4 mb-6">
+              <div>
+                <h2 className="text-3xl font-bold flex items-center gap-2.5">
+                  <CalendarDays className="w-7 h-7 text-primary" />
+                  Forthcoming Events
+                </h2>
+                <p className="text-muted-foreground mt-1">
+                  CA meetups and seminars — carpool with peers and earn reward points.
+                </p>
+              </div>
+              <Link
+                to="/events"
+                className="text-sm text-primary hover:underline shrink-0 whitespace-nowrap"
+              >
+                View all
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {nextEvents.map((e) => (
+                <div
+                  key={e.id}
+                  className="bg-card border border-primary rounded-xl p-5 flex flex-col"
+                >
+                  <div className="text-sm font-semibold text-primary">{formatDate(e.date)}</div>
+                  {e.time && (
+                    <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                      <Clock className="w-3.5 h-3.5" />
+                      {formatTime(e.time)}
+                    </div>
+                  )}
+                  <h3 className="font-semibold mt-2">{e.title}</h3>
+                  {e.location && (
+                    <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                      <MapPin className="w-4 h-4 shrink-0" />
+                      <span className="truncate">{e.location}</span>
+                    </p>
+                  )}
+                  <Link
+                    to={`/publish?to=${encodeURIComponent(e.location ?? "")}&date=${e.date}`}
+                    className={`${btn("primary", "sm")} mt-4 self-start`}
+                  >
+                    <Car className="w-4 h-4" />
+                    Carpool
+                  </Link>
+                </div>
+              ))}
             </div>
           </div>
         </section>
