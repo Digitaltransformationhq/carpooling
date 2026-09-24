@@ -2,6 +2,26 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+
+    <!--
+      Canonical host. Supabase sends members back to its configured Site URL
+      after Google sign-in and after email links, which can land them on the
+      .vercel.app host and leave them there for the rest of the visit. Anything
+      that arrives there is moved to www.cacommute.com with the path, query and
+      hash kept intact, so the auth tokens Supabase puts in the fragment survive
+      the hop. This runs before the app bundle, so the Supabase client reads the
+      URL only once it is on the right host. Preview deploys, which have their
+      own .vercel.app subdomains, and localhost are left alone.
+    -->
+    <script>
+      (function () {
+        if (location.hostname === "cacommute.vercel.app") {
+          location.replace(
+            "https://www.cacommute.com" + location.pathname + location.search + location.hash
+          );
+        }
+      })();
+    </script>
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
